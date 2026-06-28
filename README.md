@@ -1,4 +1,6 @@
-# 文件传输助手 / FileTransferAssistant
+# FileTransferAssistant
+
+Languages: [English](README.md) | [简体中文](README.zh-CN.md)
 
 FileTransferAssistant is a cross-platform LAN file transfer assistant powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then send and download files through the web page.
 
