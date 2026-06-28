@@ -1,13 +1,13 @@
 # FileTransferAssistant
 
-Languages: [English](README.md) | [简体中文](README.zh-CN.md)
+[简体中文](README.zh-CN.md)
 
 FileTransferAssistant is a cross-platform LAN file transfer assistant powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then send and download files through the web page.
 
 ## Features
 
 - Browser-based file upload UI for phones, tablets, and desktop computers
-- Cross-platform receiver built on .NET 8 and ASP.NET Core Kestrel
+- Cross-platform receiver built on .NET 10 and ASP.NET Core Kestrel
 - Streaming file saves, so uploads are not buffered into memory first
 - File inbox API with download links
 - Configurable port, storage directory, upload size limit, and optional access token
@@ -17,7 +17,7 @@ FileTransferAssistant is a cross-platform LAN file transfer assistant powered by
 
 Receiver:
 
-- Windows, macOS, and Linux with .NET 8
+- Windows, macOS, and Linux with .NET 10
 
 Sender:
 

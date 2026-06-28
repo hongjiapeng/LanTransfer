@@ -1,6 +1,6 @@
 # FileTransferAssistant
 
-语言：[English](README.md) | 简体中文
+[English](README.md)
 
 FileTransferAssistant 是一个基于 .NET 和浏览器界面的跨平台局域网文件传输助手。
 
@@ -9,7 +9,7 @@ FileTransferAssistant 是一个基于 .NET 和浏览器界面的跨平台局域�
 ## 功能特性
 
 * 基于浏览器的文件上传界面，支持手机、平板和桌面电脑
-* 基于 .NET 8 与 ASP.NET Core Kestrel 的跨平台接收端
+* 基于 .NET 10 与 ASP.NET Core Kestrel 的跨平台接收端
 * 上传文件采用流式保存，不会先完整缓存到内存中
 * 提供文件收件箱 API，可查看已接收文件并生成下载链接
 * 支持配置端口、存储目录、上传大小限制和可选访问令牌
@@ -20,7 +20,7 @@ FileTransferAssistant 是一个基于 .NET 和浏览器界面的跨平台局域�
 接收端：
 
 * Windows、macOS、Linux
-* 需要安装 .NET 8
+* 需要安装 .NET 10
 
 发送端：
 
