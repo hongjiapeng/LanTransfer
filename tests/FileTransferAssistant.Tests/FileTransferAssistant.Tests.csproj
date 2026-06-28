@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>PhoneControlKit.Tests</RootNamespace>
-    <AssemblyName>PhoneControlKit.Tests</AssemblyName>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>FileTransferAssistant.Tests</RootNamespace>
+    <AssemblyName>FileTransferAssistant.Tests</AssemblyName>
     <OutputType>Library</OutputType>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PhoneControlKit\PhoneControlKit.csproj" />
+    <ProjectReference Include="..\..\src\FileTransferAssistant\FileTransferAssistant.csproj" />
   </ItemGroup>
 
 </Project>

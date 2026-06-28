@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace PhoneControlKit.Handlers
+namespace FileTransferAssistant.Handlers
 {
     public class DefaultMessageHandler : IMessageHandler
     {

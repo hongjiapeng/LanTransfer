@@ -1,27 +1,28 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using PhoneControlKit.Handlers;
-using PhoneControlKit.Models;
+using FileTransferAssistant.Handlers;
+using FileTransferAssistant.Models;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace PhoneControlKit.Tests
+namespace FileTransferAssistant.Tests
 {
-    public class PhoneControlServiceTests : IDisposable
+    public class FileTransferServiceTests : IDisposable
     {
-        private readonly Mock<ILogger<PhoneControlService>> _mockLogger;
+        private readonly Mock<ILogger<FileTransferService>> _mockLogger;
         private readonly Mock<IMessageHandler> _mockMessageHandler;
         private readonly Mock<IFileUploadHandler> _mockFileUploadHandler;
-        private readonly PhoneControlService _service;
+        private readonly FileTransferService _service;
 
-        public PhoneControlServiceTests()
+        public FileTransferServiceTests()
         {
-            _mockLogger = new Mock<ILogger<PhoneControlService>>();
+            _mockLogger = new Mock<ILogger<FileTransferService>>();
             _mockMessageHandler = new Mock<IMessageHandler>();
             _mockFileUploadHandler = new Mock<IFileUploadHandler>();
             
-            _service = new PhoneControlService(
+            _service = new FileTransferService(
                 _mockLogger.Object,
                 _mockMessageHandler.Object,
                 _mockFileUploadHandler.Object
@@ -41,15 +42,15 @@ namespace PhoneControlKit.Tests
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new PhoneControlService(null, _mockMessageHandler.Object));
+                new FileTransferService(null, _mockMessageHandler.Object));
         }
 
         [Fact]
-        public void Constructor_WithNullMessageHandler_ThrowsArgumentNullException()
+        public void Constructor_WithNullMessageHandler_UsesDefaultHandler()
         {
             // Arrange & Act & Assert
-            Assert.Throws<ArgumentNullException>(() =>
-                new PhoneControlService(_mockLogger.Object, null));
+            using var service = new FileTransferService(_mockLogger.Object, null);
+            Assert.NotNull(service);
         }
 
         [Fact]
@@ -59,7 +60,7 @@ namespace PhoneControlKit.Tests
             var config = new ServiceConfiguration { Port = 9999 };
 
             // Act
-            var service = new PhoneControlService(
+            var service = new FileTransferService(
                 _mockLogger.Object,
                 _mockMessageHandler.Object,
                 null,
@@ -69,6 +70,27 @@ namespace PhoneControlKit.Tests
             // Assert
             Assert.Equal(9999, service.Port);
             service.Dispose();
+        }
+
+        [Fact]
+        public void Constructor_WithConfiguration_ExposesStorageDirectory()
+        {
+            // Arrange
+            var config = new ServiceConfiguration
+            {
+                StorageDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))
+            };
+
+            // Act
+            using var service = new FileTransferService(
+                _mockLogger.Object,
+                _mockMessageHandler.Object,
+                _mockFileUploadHandler.Object,
+                config
+            );
+
+            // Assert
+            Assert.Equal(config.StorageDirectory, service.StorageDirectory);
         }
 
         [Fact]

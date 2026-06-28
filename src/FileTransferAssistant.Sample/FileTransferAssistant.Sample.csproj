@@ -3,13 +3,13 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>PhoneControlKit.Sample</RootNamespace>
-    <AssemblyName>PhoneControlKit.Sample</AssemblyName>
+    <RootNamespace>FileTransferAssistant.Sample</RootNamespace>
+    <AssemblyName>FileTransferAssistant.Sample</AssemblyName>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PhoneControlKit\PhoneControlKit.csproj" />
+    <ProjectReference Include="..\FileTransferAssistant\FileTransferAssistant.csproj" />
   </ItemGroup>
 
   <ItemGroup>

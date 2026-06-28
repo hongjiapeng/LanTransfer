@@ -1,183 +1,123 @@
-# PhoneControlKit
+# 文件传输助手 / FileTransferAssistant
 
-A .NET library for seamless phone-to-PC communication via HTTP server. Enable mobile devices to send messages and upload files to your PC applications through a simple web interface.
+FileTransferAssistant is a cross-platform LAN file transfer assistant powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then send and download files through the web page.
 
-## ✨ Features
+## Features
 
-- **HTTP Server**: Lightweight HTTP server for phone-to-PC communication
-- **Message Handling**: Customizable message handlers with async support
-- **File Uploads**: Support for file uploads with configurable size limits
-- **Event Notifications**: Real-time service status updates
-- **Embedded Web UI**: Built-in mobile-friendly web interface
-- **Flexible Configuration**: Easy-to-configure service options
-- **Dependency Injection Ready**: Designed with modern .NET patterns
+- Browser-based file upload UI for phones, tablets, and desktop computers
+- Cross-platform receiver built on .NET 8 and ASP.NET Core Kestrel
+- Streaming file saves, so uploads are not buffered into memory first
+- File inbox API with download links
+- Configurable port, storage directory, upload size limit, and optional access token
+- Small CLI sample for local testing and open-source demos
 
-## 📦 Installation
+## Platform Support
+
+Receiver:
+
+- Windows, macOS, and Linux with .NET 8
+
+Sender:
+
+- Any modern browser on Windows, macOS, Linux, Android, or iOS
+
+Network:
+
+- Devices should be on the same LAN unless you use VPN, tunneling, or your own network routing.
+
+## Quick Start
 
 ```bash
-dotnet add package PhoneControlKit
+dotnet run --project src/FileTransferAssistant.Sample
 ```
 
-Or clone and build from source:
+Open the printed URL from another device on the same LAN.
 
-```bash
-git clone <repository-url>
-cd PhoneControlKit
-dotnet build
-```
-
-## 🚀 Quick Start
-
-### Basic Usage
+## Library Usage
 
 ```csharp
+using FileTransferAssistant;
+using FileTransferAssistant.Models;
 using Microsoft.Extensions.Logging;
-using PhoneControlKit;
-using PhoneControlKit.Handlers;
-using PhoneControlKit.Models;
 
-// Setup logging
-var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-var logger = loggerFactory.CreateLogger<PhoneControlService>();
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
-// Create message handler
-var messageHandler = new DefaultMessageHandler();
-
-// Create file upload handler (optional)
-var fileUploadHandler = new DefaultFileUploadHandler(
-    loggerFactory.CreateLogger<DefaultFileUploadHandler>()
-);
-
-// Configure service
 var config = new ServiceConfiguration
 {
     Port = 8765,
     AllowFileUploads = true,
-    MaxFileSize = 104857600  // 100 MB
+    MaxFileSize = 1073741824
 };
 
-// Create and start service
-var service = new PhoneControlService(
-    logger,
-    messageHandler,
-    fileUploadHandler,
-    config
+var service = new FileTransferService(
+    loggerFactory.CreateLogger<FileTransferService>(),
+    configuration: config
 );
 
 await service.StartAsync();
-Console.WriteLine($"Server running at: {service.GetServerUrl()}");
+Console.WriteLine(service.GetServerUrl());
 ```
 
-### Custom Message Handler
-
-```csharp
-public class MyMessageHandler : IMessageHandler
-{
-    public async Task<string> HandleMessageAsync(string message)
-    {
-        // Process the message from phone
-        var result = await ProcessMessageAsync(message);
-        
-        // Return response to phone
-        return $"Processed: {result}";
-    }
-}
-```
-
-### Custom File Upload Handler
-
-```csharp
-public class MyFileUploadHandler : IFileUploadHandler
-{
-    public async Task HandleFileUploadAsync(string fileName, byte[] fileData)
-    {
-        // Save file to custom location
-        var path = Path.Combine(@"C:\MyUploads", fileName);
-        await File.WriteAllBytesAsync(path, fileData);
-        
-        // Process file as needed
-        await ProcessFileAsync(path);
-    }
-}
-```
-
-## 📱 Using from Phone
-
-1. Start the service on your PC
-2. Note the URL displayed (e.g., `http://192.168.1.100:8765`)
-3. Open the URL in your phone's browser
-4. Send messages or upload files through the web interface
-
-## ⚙️ Configuration
+## Configuration
 
 ```csharp
 var config = new ServiceConfiguration
 {
-    Port = 8765,                     // Server port
-    AllowFileUploads = true,         // Enable/disable file uploads
-    MaxFileSize = 104857600,         // Max file size (100 MB)
-    RequestHeadersTimeout = TimeSpan.FromMinutes(2)
+    Port = 8765,
+    DeviceName = Environment.MachineName,
+    StorageDirectory = @"D:\Transfers",
+    AllowFileUploads = true,
+    MaxFileSize = 1073741824,
+    RequestHeadersTimeout = TimeSpan.FromMinutes(2),
+    RequireAccessToken = false,
+    AccessToken = ""
 };
 ```
 
-## 🏗️ Architecture
+## HTTP API
 
-```
-PhoneControlKit
-├── PhoneControlService          # Main service class
-├── Handlers
-│   ├── IMessageHandler          # Message processing interface
-│   ├── IFileUploadHandler       # File upload interface
-│   ├── DefaultMessageHandler    # Default message handler
-│   └── DefaultFileUploadHandler # Default file handler
-├── Models
-│   ├── ServiceConfiguration     # Service config model
-│   └── FileUploadedEventArgs   # File upload event args
-└── wwwroot                      # Embedded web UI
-    ├── index.html
-    ├── css/styles.css
-    └── js/app.js
+- `GET /api/status` returns device name, URL, upload limit, and storage directory.
+- `POST /api/upload` accepts `multipart/form-data` files.
+- `GET /api/files` lists received files.
+- `GET /api/files/{id}/download` downloads a received file.
+- `POST /api/send` is retained as an optional message extension point.
+
+## Project Structure
+
+```text
+FileTransferAssistant
+├── src/FileTransferAssistant
+│   ├── FileTransferService.cs
+│   ├── Handlers
+│   ├── Models
+│   └── wwwroot
+├── src/FileTransferAssistant.Sample
+└── tests/FileTransferAssistant.Tests
 ```
 
-## 🧪 Running the Sample
+## Build and Test
 
 ```bash
-cd src/PhoneControlKit.Sample
-dotnet run
+dotnet build FileTransferAssistant.sln
+dotnet test FileTransferAssistant.sln
 ```
 
-## 🧪 Running Tests
+## Security Notes
 
-```bash
-cd tests/PhoneControlKit.Tests
-dotnet test
-```
+The service listens on all network interfaces by default so other devices on the LAN can reach it. For trusted home or office LANs this is convenient, but public or shared networks need more care.
 
-## 📋 Requirements
+- Use `RequireAccessToken` and `AccessToken` before exposing the service beyond a trusted LAN.
+- Keep received files in a controlled storage directory.
+- Do not expose the port directly to the public internet without adding stronger authentication and transport security.
 
-- .NET 6.0 or higher
-- Network connectivity between phone and PC (same network)
+## Roadmap
 
-## 🤝 Contributing
+- Device discovery on LAN
+- Pairing code flow
+- Send-to-device mode for true PC-to-PC workflows
+- Delete and rename actions in the inbox
+- Desktop tray app and notifications
 
-Contributions are welcome! Please open an issue or submit a pull request.
+## License
 
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## 💡 Use Cases
-
-- Remote PC control from mobile
-- File sharing between phone and PC
-- Voice command relay
-- Mobile-to-PC notifications
-- Cross-device automation
-- IoT device communication
-
-## 🔒 Security Notes
-
-- The service listens on all network interfaces by default
-- Consider adding authentication for production use
-- File uploads are limited by configured size limits
-- Always validate and sanitize incoming data
+MIT

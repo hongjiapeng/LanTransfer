@@ -1,0 +1,339 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    min-height: 100svh;
+    color: #161616;
+    background:
+        linear-gradient(120deg, rgba(46, 125, 102, 0.12), transparent 38%),
+        linear-gradient(300deg, rgba(196, 80, 61, 0.10), transparent 34%),
+        #f4f1eb;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.app-shell {
+    width: min(1120px, calc(100% - 32px));
+    min-height: 100svh;
+    margin: 0 auto;
+    padding: 28px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+.top-bar h1 {
+    margin: 0;
+    font-size: clamp(28px, 5vw, 56px);
+    line-height: 1;
+    font-weight: 720;
+}
+
+.top-bar p {
+    margin: 12px 0 0;
+    color: #5d5a54;
+    font-size: 15px;
+    word-break: break-all;
+}
+
+.status-pill {
+    min-width: 92px;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(22, 22, 22, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.68);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #393733;
+    flex: 0 0 auto;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #b84d3d;
+}
+
+.status-dot.connected {
+    background: #2e7d66;
+}
+
+.workspace {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.35fr);
+    gap: 28px;
+    align-items: stretch;
+}
+
+.transfer-pane,
+.inbox-pane {
+    min-width: 0;
+    padding-top: 4px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.section-heading h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.section-heading p {
+    margin: 6px 0 0;
+    color: #68645e;
+    font-size: 14px;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(22, 22, 22, 0.14);
+    border-radius: 8px;
+    color: #161616;
+    background: rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.icon-button:hover {
+    background: #ffffff;
+    border-color: rgba(22, 22, 22, 0.24);
+}
+
+.icon-button:active {
+    transform: scale(0.97);
+}
+
+.drop-zone {
+    min-height: 360px;
+    border: 1px dashed rgba(22, 22, 22, 0.32);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.56);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.drop-zone input {
+    display: none;
+}
+
+.drop-zone.dragging {
+    border-color: #2e7d66;
+    background: rgba(46, 125, 102, 0.10);
+    transform: translateY(-2px);
+}
+
+.drop-zone.busy {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.drop-symbol {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: #161616;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    line-height: 1;
+}
+
+.drop-title {
+    color: #161616;
+    font-size: 24px;
+    font-weight: 680;
+}
+
+.drop-meta {
+    color: #68645e;
+    font-size: 14px;
+}
+
+.progress-panel {
+    margin-top: 18px;
+    padding: 16px 0;
+    border-top: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+.progress-row,
+.progress-size {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: #4a4742;
+    font-size: 14px;
+}
+
+.progress-row span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.progress-track {
+    height: 8px;
+    margin: 10px 0 8px;
+    background: rgba(22, 22, 22, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background: #2e7d66;
+    transition: width 180ms ease;
+}
+
+.notice {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(22, 22, 22, 0.08);
+    color: #292724;
+    font-size: 14px;
+}
+
+.notice[data-tone="success"] {
+    background: rgba(46, 125, 102, 0.14);
+}
+
+.notice[data-tone="error"] {
+    background: rgba(184, 77, 61, 0.14);
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+.file-row {
+    min-height: 72px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+.file-info {
+    min-width: 0;
+}
+
+.file-name {
+    display: block;
+    color: #161616;
+    text-decoration: none;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.file-name:hover {
+    text-decoration: underline;
+}
+
+.file-meta {
+    margin-top: 5px;
+    color: #6c6860;
+    font-size: 13px;
+}
+
+.download-button {
+    min-width: 64px;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(22, 22, 22, 0.16);
+    border-radius: 8px;
+    color: #161616;
+    background: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.download-button:hover {
+    border-color: rgba(22, 22, 22, 0.32);
+}
+
+.download-button:active {
+    transform: scale(0.97);
+}
+
+.empty-state {
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c6860;
+    border-bottom: 1px solid rgba(22, 22, 22, 0.12);
+}
+
+@media (max-width: 760px) {
+    .app-shell {
+        width: min(100% - 24px, 1120px);
+        padding: 18px 0;
+    }
+
+    .top-bar {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .workspace {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .drop-zone {
+        min-height: 260px;
+    }
+
+    .drop-title {
+        font-size: 21px;
+    }
+}
