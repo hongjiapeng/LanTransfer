@@ -5,38 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="renderer" content="webkit">
     <title>文件传输助手</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111827'/%3E%3Cpath d='M20 33h24M32 21v24' stroke='%23ffffff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <main class="app-shell">
         <header class="top-bar">
-            <div>
+            <div class="brand-block">
+                <span class="eyebrow">LAN Transfer</span>
                 <h1>文件传输助手</h1>
                 <p id="serverUrl">正在读取连接地址</p>
             </div>
-            <div class="status-pill" aria-live="polite">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">连接中</span>
+            <div class="header-actions">
+                <div class="status-pill" aria-live="polite">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">连接中</span>
+                </div>
+                <button class="secondary-button" id="copyLinkButton" type="button">复制地址</button>
             </div>
         </header>
 
         <section class="workspace">
-            <section class="transfer-pane" aria-labelledby="uploadTitle">
+            <section class="transfer-pane panel" aria-labelledby="uploadTitle">
                 <div class="section-heading">
                     <div>
+                        <span class="section-kicker">Upload</span>
                         <h2 id="uploadTitle">发送文件</h2>
                         <p id="uploadLimit">单文件上限读取中</p>
                     </div>
-                    <button class="icon-button" id="refreshButton" type="button" title="刷新接收箱" aria-label="刷新接收箱">
-                        <span aria-hidden="true">↻</span>
-                    </button>
                 </div>
 
                 <label class="drop-zone" id="dropZone" for="fileInput">
                     <input type="file" id="fileInput" multiple>
                     <span class="drop-symbol" aria-hidden="true">+</span>
                     <span class="drop-title">选择或拖放文件</span>
-                    <span class="drop-meta">发送到当前设备</span>
+                    <span class="drop-meta">文件会保存到当前电脑的接收目录</span>
                 </label>
 
                 <div class="progress-panel" id="progressPanel" hidden>
@@ -53,12 +56,16 @@
                 <div class="notice" id="notice" hidden></div>
             </section>
 
-            <section class="inbox-pane" aria-labelledby="inboxTitle">
+            <section class="inbox-pane panel" aria-labelledby="inboxTitle">
                 <div class="section-heading">
                     <div>
+                        <span class="section-kicker">Inbox</span>
                         <h2 id="inboxTitle">接收箱</h2>
                         <p id="inboxMeta">暂无文件</p>
                     </div>
+                    <button class="icon-button" id="refreshButton" type="button" title="刷新接收箱" aria-label="刷新接收箱">
+                        <span aria-hidden="true">↻</span>
+                    </button>
                 </div>
 
                 <div class="file-list" id="fileList" aria-live="polite"></div>
