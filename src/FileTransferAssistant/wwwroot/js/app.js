@@ -1,14 +1,12 @@
 const state = {
     maxFileSize: 0,
-    isUploading: false,
-    serverUrl: ''
+    isUploading: false
 };
 
 const dom = {
     statusDot: document.getElementById('statusDot'),
     statusText: document.getElementById('statusText'),
     serverUrl: document.getElementById('serverUrl'),
-    copyLinkButton: document.getElementById('copyLinkButton'),
     uploadLimit: document.getElementById('uploadLimit'),
     dropZone: document.getElementById('dropZone'),
     fileInput: document.getElementById('fileInput'),
@@ -74,7 +72,6 @@ const ui = {
     setConnected(status) {
         dom.statusDot.classList.toggle('connected', status);
         dom.statusText.textContent = status ? '在线' : '离线';
-        dom.copyLinkButton.disabled = !status;
     },
 
     showNotice(message, tone = 'neutral') {
@@ -104,7 +101,7 @@ const ui = {
     renderFiles(files) {
         dom.inboxMeta.textContent = files.length === 0
             ? '暂无文件'
-            : `${files.length} 个文件 · 刚刚刷新`;
+            : `${files.length} 个文件`;
 
         dom.fileList.replaceChildren();
 
@@ -119,11 +116,6 @@ const ui = {
         for (const file of files) {
             const row = document.createElement('article');
             row.className = 'file-row';
-
-            const badge = document.createElement('span');
-            badge.className = 'file-badge';
-            badge.textContent = getFileExtension(file.fileName);
-            badge.setAttribute('aria-hidden', 'true');
 
             const info = document.createElement('div');
             info.className = 'file-info';
@@ -144,7 +136,7 @@ const ui = {
             action.href = file.downloadUrl;
             action.textContent = '下载';
 
-            row.append(badge, info, action);
+            row.append(info, action);
             dom.fileList.appendChild(row);
         }
     }
@@ -154,13 +146,11 @@ async function refreshStatus() {
     try {
         const status = await api.getStatus();
         state.maxFileSize = status.maxFileSize || 0;
-        state.serverUrl = status.serverUrl || window.location.href;
-        dom.serverUrl.textContent = state.serverUrl;
+        dom.serverUrl.textContent = status.serverUrl || window.location.href;
         dom.uploadLimit.textContent = `单文件上限 ${status.maxFileSizeFormatted || '未限制'}`;
         ui.setConnected(true);
     } catch (error) {
         ui.setConnected(false);
-        state.serverUrl = '';
         dom.serverUrl.textContent = '无法连接到本机服务';
         console.error(error);
     }
@@ -232,36 +222,9 @@ function formatDate(value) {
     });
 }
 
-function getFileExtension(fileName) {
-    const parts = String(fileName || '').split('.');
-    if (parts.length < 2) return 'file';
-    return parts.pop().slice(0, 4) || 'file';
-}
-
-async function copyServerUrl() {
-    if (!state.serverUrl) return;
-
-    try {
-        await navigator.clipboard.writeText(state.serverUrl);
-        ui.showNotice('连接地址已复制', 'success');
-    } catch {
-        const textarea = document.createElement('textarea');
-        textarea.value = state.serverUrl;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        ui.showNotice('连接地址已复制', 'success');
-    }
-}
-
 function setupEvents() {
     dom.fileInput.addEventListener('change', event => handleFiles(event.target.files));
     dom.refreshButton.addEventListener('click', refreshFiles);
-    dom.copyLinkButton.addEventListener('click', copyServerUrl);
 
     for (const eventName of ['dragenter', 'dragover']) {
         dom.dropZone.addEventListener(eventName, event => {
