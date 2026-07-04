@@ -107,6 +107,17 @@ On Windows:
 .\src\LanTransfer.Host\bin\Debug\net10.0\lantransfer.exe
 ```
 
+## Release
+
+GitHub Actions automatically creates a GitHub Release when a version tag is pushed:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The release workflow runs tests, publishes self-contained builds, and uploads assets for Windows x64, Linux x64/ARM64, and macOS x64/ARM64.
+
 ## Project Structure
 
 ```text
