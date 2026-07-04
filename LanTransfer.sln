@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer", "src\LanTransfer\LanTransfer.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Core", "src\LanTransfer.Core\LanTransfer.Core.csproj", "{B363F057-0F42-4C06-9846-9D7590D12C45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Sample", "src\LanTransfer.Sample\LanTransfer.Sample.csproj", "{6BB762B9-3872-4C75-9BB2-DA5122493C57}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Host", "src\LanTransfer.Host\LanTransfer.Host.csproj", "{23DE1F3F-4643-4A96-94CB-0493EA501422}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Tests", "tests\LanTransfer.Tests\LanTransfer.Tests.csproj", "{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}"
 EndProject
@@ -14,14 +14,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6BB762B9-3872-4C75-9BB2-DA5122493C57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6BB762B9-3872-4C75-9BB2-DA5122493C57}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6BB762B9-3872-4C75-9BB2-DA5122493C57}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6BB762B9-3872-4C75-9BB2-DA5122493C57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B363F057-0F42-4C06-9846-9D7590D12C45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B363F057-0F42-4C06-9846-9D7590D12C45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B363F057-0F42-4C06-9846-9D7590D12C45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B363F057-0F42-4C06-9846-9D7590D12C45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23DE1F3F-4643-4A96-94CB-0493EA501422}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23DE1F3F-4643-4A96-94CB-0493EA501422}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23DE1F3F-4643-4A96-94CB-0493EA501422}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23DE1F3F-4643-4A96-94CB-0493EA501422}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}.Release|Any CPU.ActiveCfg = Release|Any CPU

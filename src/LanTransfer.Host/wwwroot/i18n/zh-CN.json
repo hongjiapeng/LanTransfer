@@ -1,0 +1,50 @@
+{
+  "app": {
+    "title": "LanTransfer",
+    "subtitle": "在同一局域网内，在手机、平板和电脑之间快速传输文件。"
+  },
+  "device": {
+    "defaultName": "DESKTOP-01",
+    "connected": "已连接，可以传输文件",
+    "ready": "就绪"
+  },
+  "date": {
+    "today": "今天"
+  },
+  "upload": {
+    "dropHint": "拖拽文件到这里，或选择文件",
+    "mobileHint": "选择文件发送",
+    "selectFiles": "选择文件",
+    "sending": "发送中 {percent}%",
+    "sent": "已发送",
+    "success": "文件已发送。",
+    "failed": "发送失败"
+  },
+  "files": {
+    "title": "文件",
+    "empty": "暂无文件",
+    "download": "下载",
+    "size": "大小",
+    "type": "类型"
+  },
+  "footer": {
+    "localNetworkOnly": "仅在本地网络中传输"
+  },
+  "errors": {
+    "fileTooLarge": "文件过大。",
+    "fileNotFound": "文件不存在。",
+    "invalidFileName": "文件名无效。",
+    "unauthorized": "未授权。",
+    "uploadFailed": "文件上传失败。",
+    "networkError": "网络错误。"
+  },
+  "language": {
+    "label": "语言",
+    "english": "English",
+    "chinese": "简体中文"
+  },
+  "accessToken": {
+    "label": "访问令牌",
+    "placeholder": "可选令牌"
+  }
+}

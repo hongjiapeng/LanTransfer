@@ -1,155 +1,102 @@
 # LanTransfer
 
-[English](README.md)
+[English](./README.md)
 
-LanTransfer 是一个基于 .NET 和浏览器界面的跨平台局域网文件传输助手。
+LanTransfer 是一个跨平台局域网文件传输工具。你可以在一台设备上启动接收端服务，然后在同一局域网内通过手机、平板或电脑浏览器访问页面，快速上传和下载文件。
 
-你只需要在一台设备上启动接收服务，然后用同一局域网内的手机、平板或电脑打开终端里显示的地址，就可以通过网页上传、下载和管理文件。
+在同一局域网内，在手机、平板和电脑之间快速传输文件。
 
 ## 功能特性
 
-* 基于浏览器的文件上传界面，支持手机、平板和桌面电脑
-* 基于 .NET 10 与 ASP.NET Core Kestrel 的跨平台接收端
-* 上传文件采用流式保存，不会先完整缓存到内存中
-* 提供文件收件箱 API，可查看已接收文件并生成下载链接
-* 支持配置端口、存储目录、上传大小限制和可选访问令牌
-* 提供轻量 CLI 示例，方便本地测试和开源演示
+- 基于浏览器的局域网上传和下载
+- 基于 ASP.NET Core Kestrel 的接收端服务
+- 面向手机、平板和桌面的聊天式文件传输界面
+- 流式保存文件，并使用 `.uploading` 临时文件避免半成品污染
+- 文件名安全处理、路径穿越防护、同名文件自动生成可读名称
+- 支持配置端口、存储目录、上传大小限制和可选访问令牌
+- 前端支持 English / 简体中文轻量多语言
 
 ## 平台支持
 
 接收端：
 
-* Windows、macOS、Linux
-* 需要安装 .NET 10
+- Windows、macOS、Linux
+- 需要 .NET 10
 
 发送端：
 
-* 任意现代浏览器
-* 支持 Windows、macOS、Linux、Android、iOS
+- 任意现代浏览器
+- 支持 Windows、macOS、Linux、Android、iOS
 
 网络要求：
 
-* 默认适用于同一局域网内的设备
-* 跨网络使用时，需要自行配置 VPN、内网穿透或其他网络路由方案
+- 默认适用于同一局域网内的设备；跨网络使用需要自行配置 VPN、内网穿透或其他路由方案。
 
 ## 快速开始
 
 ```bash
-dotnet run --project src/LanTransfer.Sample
+dotnet run --project src/LanTransfer.Host
 ```
 
-启动后，在同一局域网内的另一台设备上打开终端中打印出来的 URL，即可进入文件传输页面。
+启动后，在同一局域网内的另一台设备上打开 `http://<接收端 IP>:8765`。
 
-## 作为类库使用
+## 配置说明
 
-```csharp
-using LanTransfer;
-using LanTransfer.Models;
-using Microsoft.Extensions.Logging;
+LanTransfer 从 `src/LanTransfer.Host/appsettings.json` 的 `LanTransfer` 节读取配置。
 
-using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-
-var config = new ServiceConfiguration
+```json
 {
-    Port = 8765,
-    AllowFileUploads = true,
-    MaxFileSize = 1073741824
-};
-
-var service = new FileTransferService(
-    loggerFactory.CreateLogger<FileTransferService>(),
-    configuration: config
-);
-
-await service.StartAsync();
-Console.WriteLine(service.GetServerUrl());
+  "LanTransfer": {
+    "Port": 8765,
+    "StorageDirectory": "uploads",
+    "MaxFileSizeBytes": 1073741824,
+    "AccessToken": null
+  }
+}
 ```
 
-## 配置示例
+如果配置了 `AccessToken`，受保护接口需要通过 `X-LanTransfer-Token` 请求头或 `?token=...` query 参数传递令牌。
 
-```csharp
-var config = new ServiceConfiguration
-{
-    Port = 8765,
-    DeviceName = Environment.MachineName,
-    StorageDirectory = @"D:\Transfers",
-    AllowFileUploads = true,
-    MaxFileSize = 1073741824,
-    RequestHeadersTimeout = TimeSpan.FromMinutes(2),
-    RequireAccessToken = false,
-    AccessToken = ""
-};
-```
+## API 概览
 
-配置说明：
+- `GET /api/health`：返回服务状态和设备名称。
+- `POST /api/files/upload`：上传一个名为 `file` 的 multipart 文件字段。
+- `GET /api/files`：获取已接收文件列表。
+- `GET /api/files/{fileName}`：下载指定文件。
 
-* `Port`：服务监听端口
-* `DeviceName`：设备名称，用于状态展示
-* `StorageDirectory`：接收文件的保存目录
-* `AllowFileUploads`：是否允许上传文件
-* `MaxFileSize`：单个上传文件大小限制
-* `RequestHeadersTimeout`：请求头超时时间
-* `RequireAccessToken`：是否要求访问令牌
-* `AccessToken`：访问令牌内容
+错误响应使用稳定的 `errorCode`，例如 `file_too_large`、`file_not_found`、`invalid_file_name`、`unauthorized`、`upload_failed`、`network_error`。
 
-## HTTP API
-
-* `GET /api/status`
-  返回设备名称、访问 URL、上传大小限制和存储目录。
-
-* `POST /api/upload`
-  接收 `multipart/form-data` 格式的文件上传请求。
-
-* `GET /api/files`
-  获取已接收文件列表。
-
-* `GET /api/files/{id}/download`
-  下载指定的已接收文件。
-
-* `POST /api/send`
-  保留为可选的消息扩展入口。
-
-## 项目结构
-
-```text
-LanTransfer
-├── src/LanTransfer
-│   ├── FileTransferService.cs
-│   ├── Handlers
-│   ├── Models
-│   └── wwwroot
-├── src/LanTransfer.Sample
-└── tests/LanTransfer.Tests
-```
-
-## 构建与测试
+## 从源码构建
 
 ```bash
 dotnet build LanTransfer.sln
 dotnet test LanTransfer.sln
 ```
 
-## 安全说明
+## 项目结构
 
-默认情况下，服务会监听所有网络接口，方便同一局域网内的其他设备访问。
-
-这对家庭或可信办公网络很方便，但在公共网络、共享网络或跨公网访问时需要额外注意安全。
-
-建议：
-
-* 在非可信网络中使用前，开启 `RequireAccessToken` 并设置 `AccessToken`
-* 将接收文件保存到受控目录，避免污染系统关键路径
-* 不要将服务端口直接暴露到公网
-* 公网访问场景下，应额外增加更强的身份认证与传输加密
+```text
+LanTransfer/
+├─ src/
+│  ├─ LanTransfer.Core/
+│  └─ LanTransfer.Host/
+├─ tests/
+│  └─ LanTransfer.Tests/
+├─ docs/
+├─ screenshots/
+├─ README.md
+├─ README.zh-CN.md
+└─ LanTransfer.sln
+```
 
 ## 路线图
 
-* 局域网设备发现
-* 配对码流程
-* 面向 PC 到 PC 的主动发送模式
-* 收件箱文件删除与重命名
-* 桌面托盘应用与系统通知
+- 配对码流程
+- 用二维码打开局域网访问地址
+- 已接收文件删除与重命名
+- 桌面托盘应用与系统通知
+- 面向非可信网络的更强认证方案
 
-## License
+## 许可证
 
 MIT

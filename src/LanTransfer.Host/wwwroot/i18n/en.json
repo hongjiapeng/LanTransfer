@@ -1,0 +1,50 @@
+{
+  "app": {
+    "title": "LanTransfer",
+    "subtitle": "Simple file transfer across devices on the same local network."
+  },
+  "device": {
+    "defaultName": "DESKTOP-01",
+    "connected": "Connected, ready to transfer files",
+    "ready": "Ready"
+  },
+  "date": {
+    "today": "Today"
+  },
+  "upload": {
+    "dropHint": "Drag files here, or choose files",
+    "mobileHint": "Choose files to send",
+    "selectFiles": "Choose files",
+    "sending": "Sending {percent}%",
+    "sent": "Sent",
+    "success": "File sent.",
+    "failed": "Failed"
+  },
+  "files": {
+    "title": "Files",
+    "empty": "No files yet",
+    "download": "Download",
+    "size": "Size",
+    "type": "Type"
+  },
+  "footer": {
+    "localNetworkOnly": "Transfer only on your local network"
+  },
+  "errors": {
+    "fileTooLarge": "File is too large.",
+    "fileNotFound": "File was not found.",
+    "invalidFileName": "File name is invalid.",
+    "unauthorized": "Unauthorized.",
+    "uploadFailed": "File upload failed.",
+    "networkError": "Network error."
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "chinese": "Simplified Chinese"
+  },
+  "accessToken": {
+    "label": "Access token",
+    "placeholder": "Optional token"
+  }
+}

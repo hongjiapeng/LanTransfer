@@ -1,71 +1,66 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="renderer" content="webkit">
-    <title>文件传输助手</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>LanTransfer</title>
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
     <main class="app-shell">
-        <header class="top-bar">
-            <div>
-                <h1>文件传输助手</h1>
-                <p id="serverUrl">正在读取连接地址</p>
-            </div>
-            <div class="status-pill" aria-live="polite">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">连接中</span>
-            </div>
-        </header>
-
-        <section class="workspace">
-            <section class="transfer-pane" aria-labelledby="uploadTitle">
-                <div class="section-heading">
-                    <div>
-                        <h2 id="uploadTitle">发送文件</h2>
-                        <p id="uploadLimit">单文件上限读取中</p>
-                    </div>
-                    <button class="icon-button" id="refreshButton" type="button" title="刷新接收箱" aria-label="刷新接收箱">
-                        <span aria-hidden="true">↻</span>
-                    </button>
+        <section class="transfer-window" aria-label="LanTransfer">
+            <header class="device-header">
+                <div class="device-mark" aria-hidden="true">
+                    <span class="screen-icon"></span>
                 </div>
-
-                <label class="drop-zone" id="dropZone" for="fileInput">
-                    <input type="file" id="fileInput" multiple>
-                    <span class="drop-symbol" aria-hidden="true">+</span>
-                    <span class="drop-title">选择或拖放文件</span>
-                    <span class="drop-meta">发送到当前设备</span>
-                </label>
-
-                <div class="progress-panel" id="progressPanel" hidden>
-                    <div class="progress-row">
-                        <span id="progressName">准备上传</span>
-                        <span id="progressPercent">0%</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
-                    <div class="progress-size" id="progressSize">0 / 0</div>
+                <div class="device-copy">
+                    <h1 id="deviceName" data-i18n="device.defaultName">DESKTOP-01</h1>
+                    <p><span class="status-dot"></span><span data-i18n="device.connected">Connected, ready to transfer files</span></p>
                 </div>
+                <details class="more-menu">
+                    <summary aria-label="More options"><span aria-hidden="true">⋯</span></summary>
+                    <div class="menu-panel">
+                        <label>
+                            <span data-i18n="language.label">Language</span>
+                            <select id="languageSelect">
+                                <option value="en" data-i18n="language.english">English</option>
+                                <option value="zh-CN" data-i18n="language.chinese">Simplified Chinese</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span data-i18n="accessToken.label">Access token</span>
+                            <input id="tokenInput" type="password" autocomplete="off" data-i18n-placeholder="accessToken.placeholder" placeholder="Optional token">
+                        </label>
+                    </div>
+                </details>
+            </header>
 
-                <div class="notice" id="notice" hidden></div>
+            <section class="timeline-shell">
+                <div class="date-divider">
+                    <span></span>
+                    <strong data-i18n="date.today">Today</strong>
+                    <span></span>
+                </div>
+                <div class="timeline" id="timeline" aria-live="polite"></div>
+                <p class="empty-state" id="emptyState" data-i18n="files.empty" hidden>No files yet</p>
             </section>
 
-            <section class="inbox-pane" aria-labelledby="inboxTitle">
-                <div class="section-heading">
-                    <div>
-                        <h2 id="inboxTitle">接收箱</h2>
-                        <p id="inboxMeta">暂无文件</p>
-                    </div>
-                </div>
+            <footer class="composer">
+                <input id="fileInput" type="file" multiple>
+                <button id="chooseButton" class="add-button" type="button" data-i18n-title="upload.selectFiles" title="Choose files" aria-label="Choose files">+</button>
+                <button id="dropZone" class="drop-target" type="button">
+                    <span class="desktop-hint" data-i18n="upload.dropHint">Drag files here, or choose files</span>
+                    <span class="mobile-hint" data-i18n="upload.mobileHint">Choose files to send</span>
+                </button>
+                <button id="sendButton" class="send-button" type="button" data-i18n-title="upload.selectFiles" title="Send selected files" aria-label="Send selected files">➤</button>
+                <p class="local-note"><span class="note-lock" aria-hidden="true">🔒</span><span data-i18n="footer.localNetworkOnly">Transfer only on your local network</span></p>
+            </footer>
 
-                <div class="file-list" id="fileList" aria-live="polite"></div>
-            </section>
+            <div class="toast" id="toast" hidden></div>
         </section>
     </main>
 
+    <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

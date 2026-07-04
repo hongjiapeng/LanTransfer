@@ -1,23 +1,24 @@
 # LanTransfer
 
-[简体中文](README.zh-CN.md)
+[中文文档](./README.zh-CN.md)
 
-LanTransfer is a cross-platform LAN file transfer assistant powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then send and download files through the web page.
+LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then upload and download files through the web page.
 
 ## Features
 
-- Browser-based file upload UI for phones, tablets, and desktop computers
-- Cross-platform receiver built on .NET 10 and ASP.NET Core Kestrel
-- Streaming file saves, so uploads are not buffered into memory first
-- File inbox API with download links
+- Browser-based LAN file upload and download
+- ASP.NET Core Kestrel receiver with a static HTML/CSS/JavaScript UI
+- Chat-style file transfer interface for phones, tablets, and desktops
+- Streaming file saves with temporary `.uploading` files
+- Safe file-name handling, path traversal protection, and readable duplicate names
 - Configurable port, storage directory, upload size limit, and optional access token
-- Small CLI sample for local testing and open-source demos
+- Lightweight English and Simplified Chinese web UI localization
 
 ## Platform Support
 
 Receiver:
 
-- Windows, macOS, and Linux with .NET 10
+- Windows, macOS, or Linux with .NET 10
 
 Sender:
 
@@ -25,100 +26,72 @@ Sender:
 
 Network:
 
-- Devices should be on the same LAN unless you use VPN, tunneling, or your own network routing.
+- Devices must be on the same local network unless you configure VPN, tunneling, or routing yourself.
 
 ## Quick Start
 
 ```bash
-dotnet run --project src/LanTransfer.Sample
+dotnet run --project src/LanTransfer.Host
 ```
 
-Open the printed URL from another device on the same LAN.
-
-## Library Usage
-
-```csharp
-using LanTransfer;
-using LanTransfer.Models;
-using Microsoft.Extensions.Logging;
-
-using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-
-var config = new ServiceConfiguration
-{
-    Port = 8765,
-    AllowFileUploads = true,
-    MaxFileSize = 1073741824
-};
-
-var service = new FileTransferService(
-    loggerFactory.CreateLogger<FileTransferService>(),
-    configuration: config
-);
-
-await service.StartAsync();
-Console.WriteLine(service.GetServerUrl());
-```
+Open `http://<receiver-ip>:8765` from another device on the same LAN.
 
 ## Configuration
 
-```csharp
-var config = new ServiceConfiguration
+LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettings.json`.
+
+```json
 {
-    Port = 8765,
-    DeviceName = Environment.MachineName,
-    StorageDirectory = @"D:\Transfers",
-    AllowFileUploads = true,
-    MaxFileSize = 1073741824,
-    RequestHeadersTimeout = TimeSpan.FromMinutes(2),
-    RequireAccessToken = false,
-    AccessToken = ""
-};
+  "LanTransfer": {
+    "Port": 8765,
+    "StorageDirectory": "uploads",
+    "MaxFileSizeBytes": 1073741824,
+    "AccessToken": null
+  }
+}
 ```
 
-## HTTP API
+If `AccessToken` is configured, protected API calls must include `X-LanTransfer-Token` or `?token=...`.
 
-- `GET /api/status` returns device name, URL, upload limit, and storage directory.
-- `POST /api/upload` accepts `multipart/form-data` files.
+## API Overview
+
+- `GET /api/health` returns service status and device name.
+- `POST /api/files/upload` uploads one multipart file field named `file`.
 - `GET /api/files` lists received files.
-- `GET /api/files/{id}/download` downloads a received file.
-- `POST /api/send` is retained as an optional message extension point.
+- `GET /api/files/{fileName}` downloads a received file.
 
-## Project Structure
+Error responses use stable `errorCode` values such as `file_too_large`, `file_not_found`, `invalid_file_name`, `unauthorized`, `upload_failed`, and `network_error`.
 
-```text
-LanTransfer
-├── src/LanTransfer
-│   ├── FileTransferService.cs
-│   ├── Handlers
-│   ├── Models
-│   └── wwwroot
-├── src/LanTransfer.Sample
-└── tests/LanTransfer.Tests
-```
-
-## Build and Test
+## Build from Source
 
 ```bash
 dotnet build LanTransfer.sln
 dotnet test LanTransfer.sln
 ```
 
-## Security Notes
+## Project Structure
 
-The service listens on all network interfaces by default so other devices on the LAN can reach it. For trusted home or office LANs this is convenient, but public or shared networks need more care.
-
-- Use `RequireAccessToken` and `AccessToken` before exposing the service beyond a trusted LAN.
-- Keep received files in a controlled storage directory.
-- Do not expose the port directly to the public internet without adding stronger authentication and transport security.
+```text
+LanTransfer/
+├─ src/
+│  ├─ LanTransfer.Core/
+│  └─ LanTransfer.Host/
+├─ tests/
+│  └─ LanTransfer.Tests/
+├─ docs/
+├─ screenshots/
+├─ README.md
+├─ README.zh-CN.md
+└─ LanTransfer.sln
+```
 
 ## Roadmap
 
-- Device discovery on LAN
 - Pairing code flow
-- Send-to-device mode for true PC-to-PC workflows
-- Delete and rename actions in the inbox
+- QR code for opening the LAN URL
+- Delete and rename actions for received files
 - Desktop tray app and notifications
+- Stronger authentication for non-trusted networks
 
 ## License
 

@@ -248,6 +248,12 @@ _pkginfo.txt
 # Others
 ClientBin/
 ~$*
+
+# Playwright CLI local artifacts
+.playwright-cli/
+
+# Local output artifacts
+output/
 *~
 *.dbmdl
 *.dbproj.schemaview
@@ -416,3 +422,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# LanTransfer local data
+uploads/
+**/uploads/
+*.uploading
