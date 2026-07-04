@@ -263,29 +263,27 @@ button {
 .message-row {
     min-width: 0;
     width: 100%;
-    max-width: min(86vw, 430px);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 46px;
+    max-width: min(86vw, 620px);
+    display: flex;
     align-items: center;
     gap: 10px;
-    justify-self: start;
+    justify-content: flex-start;
+    margin: 0;
 }
 
 .message-row.outgoing {
-    grid-template-columns: 46px minmax(0, 1fr);
-    align-self: flex-end;
-    justify-self: end;
+    justify-content: flex-end;
 }
 
 .message-row.incoming {
-    align-self: flex-start;
-    justify-self: start;
+    justify-content: flex-start;
 }
 
 .message-time {
     color: var(--muted);
     font-size: 12px;
     white-space: nowrap;
+    min-width: 0;
 }
 
 .message-row.outgoing .message-time {
@@ -306,10 +304,26 @@ button {
     border-radius: 8px;
     background: var(--bubble);
     box-shadow: var(--card-shadow);
+    overflow: hidden;
 }
 
 .file-card > * {
     min-width: 0;
+}
+
+.file-title,
+.file-meta,
+.file-action,
+.download-button,
+.status-text,
+.progress-track {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.progress-track {
+    width: 100%;
+    max-width: 132px;
 }
 
 .outgoing .file-card {
