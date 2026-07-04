@@ -248,7 +248,7 @@ async function refreshFiles() {
         const files = await listFiles();
         dom.timeline.replaceChildren();
         dom.emptyState.hidden = files.length > 0;
-        for (const file of files) {
+        for (const file of [...files].reverse()) {
             renderFileMessage(file, 'incoming');
         }
     } catch (error) {
