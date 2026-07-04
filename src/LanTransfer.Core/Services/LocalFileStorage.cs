@@ -145,7 +145,10 @@ public sealed class LocalFileStorage : IFileStorage
         var decoded = DecodeFileName(fileName);
         RejectPathLikeFileName(decoded);
 
-        var invalidChars = Path.GetInvalidFileNameChars();
+        var invalidChars = Path.GetInvalidFileNameChars()
+            .Concat(new[] { ':', '*', '?', '"', '<', '>', '|' })
+            .ToHashSet();
+
         var cleaned = new string(decoded
             .Trim()
             .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
