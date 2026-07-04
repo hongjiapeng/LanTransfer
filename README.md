@@ -2,12 +2,14 @@
 
 [中文文档](./README.zh-CN.md)
 
-LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a browser-based UI. Run it on one device, open the shown URL from another phone, tablet, or computer on the same local network, then upload and download files through the web page.
+LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a browser-based UI. Run the `lantransfer` console host on one device, open the shown LAN URL from another phone, tablet, or computer on the same local network, then upload and download files through a clean transfer page.
 
 ## Features
 
 - Browser-based LAN file upload and download
-- ASP.NET Core Kestrel receiver with a static HTML/CSS/JavaScript UI
+- Cross-platform console host named `lantransfer`
+- ASP.NET Core Kestrel receiver using HTTP by default for LAN access
+- Static HTML/CSS/JavaScript UI with no frontend build system
 - Chat-style file transfer interface for phones, tablets, and desktops
 - Streaming file saves with temporary `.uploading` files
 - Safe file-name handling, path traversal protection, and readable duplicate names
@@ -34,7 +36,14 @@ Network:
 dotnet run --project src/LanTransfer.Host
 ```
 
-Open `http://<receiver-ip>:8765` from another device on the same LAN.
+LanTransfer listens on `http://0.0.0.0:8765` and prints local and LAN URLs at startup.
+
+Open one of these URLs:
+
+- Same device: `http://localhost:8765`
+- Another device on the LAN: `http://<receiver-ip>:8765`
+
+The first version intentionally uses HTTP on the local network. It does not require trusting an ASP.NET Core development HTTPS certificate.
 
 ## Configuration
 
@@ -53,6 +62,19 @@ LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettin
 
 If `AccessToken` is configured, protected API calls must include `X-LanTransfer-Token` or `?token=...`.
 
+Environment variables can override configuration values by using the `LanTransfer__` prefix, for example:
+
+```bash
+LanTransfer__Port=9000 dotnet run --project src/LanTransfer.Host
+```
+
+On PowerShell:
+
+```powershell
+$env:LanTransfer__Port = "9000"
+dotnet run --project src/LanTransfer.Host
+```
+
 ## API Overview
 
 - `GET /api/health` returns service status and device name.
@@ -69,6 +91,18 @@ dotnet build LanTransfer.sln
 dotnet test LanTransfer.sln
 ```
 
+Run the built executable directly:
+
+```bash
+src/LanTransfer.Host/bin/Debug/net10.0/lantransfer
+```
+
+On Windows:
+
+```powershell
+.\src\LanTransfer.Host\bin\Debug\net10.0\lantransfer.exe
+```
+
 ## Project Structure
 
 ```text
@@ -76,6 +110,7 @@ LanTransfer/
 ├─ src/
 │  ├─ LanTransfer.Core/
 │  └─ LanTransfer.Host/
+│     └─ wwwroot/
 ├─ tests/
 │  └─ LanTransfer.Tests/
 ├─ docs/
@@ -90,6 +125,7 @@ LanTransfer/
 - Pairing code flow
 - QR code for opening the LAN URL
 - Delete and rename actions for received files
+- Better image/file thumbnails
 - Desktop tray app and notifications
 - Stronger authentication for non-trusted networks
 
