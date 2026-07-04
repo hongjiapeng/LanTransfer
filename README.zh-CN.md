@@ -18,6 +18,10 @@ LanTransfer 是一个跨平台局域网文件传输工具。你可以在一台�
 - 支持配置端口、存储目录、上传大小限制和可选访问令牌
 - 前端支持 English / 简体中文轻量多语言
 
+## 界面截图
+
+![LanTransfer 桌面界面](./screenshots/lantransfer-product-preview-zh-CN.png)
+
 ## 平台支持
 
 接收端：

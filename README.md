@@ -16,6 +16,10 @@ LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a bro
 - Configurable port, storage directory, upload size limit, and optional access token
 - Lightweight English and Simplified Chinese web UI localization
 
+## Screenshot
+
+![LanTransfer desktop UI](./screenshots/lantransfer-product-preview-en.png)
+
 ## Platform Support
 
 Receiver:
