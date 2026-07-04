@@ -1,4 +1,4 @@
-using FileTransferAssistant.Models;
+using LanTransfer.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FileTransferAssistant.Handlers
+namespace LanTransfer.Handlers
 {
     /// <summary>
     /// Default file upload handler that saves files to a specified directory
@@ -25,7 +25,7 @@ namespace FileTransferAssistant.Handlers
             _uploadDirectory = uploadDirectory ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 "Downloads",
-                "FileTransferAssistant"
+                "LanTransfer"
             );
 
             EnsureDirectoryExists();

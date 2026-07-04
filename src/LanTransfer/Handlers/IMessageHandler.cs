@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace FileTransferAssistant.Handlers
+namespace LanTransfer.Handlers
 {
     public interface IMessageHandler
     {

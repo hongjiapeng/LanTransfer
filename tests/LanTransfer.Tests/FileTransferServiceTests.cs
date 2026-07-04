@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using FileTransferAssistant.Handlers;
-using FileTransferAssistant.Models;
+using LanTransfer.Handlers;
+using LanTransfer.Models;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace FileTransferAssistant.Tests
+namespace LanTransfer.Tests
 {
     public class FileTransferServiceTests : IDisposable
     {

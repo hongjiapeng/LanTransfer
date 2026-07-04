@@ -1,6 +1,6 @@
 using System;
 
-namespace FileTransferAssistant.Models
+namespace LanTransfer.Models
 {
     /// <summary>
     /// Event arguments for file upload notification

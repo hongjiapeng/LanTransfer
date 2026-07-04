@@ -1,6 +1,6 @@
 using System;
 
-namespace FileTransferAssistant.Models
+namespace LanTransfer.Models
 {
     /// <summary>
     /// Represents the configuration settings for the FileTransferService.
@@ -33,7 +33,7 @@ namespace FileTransferAssistant.Models
         public string StorageDirectory { get; set; } = System.IO.Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "Downloads",
-            "FileTransferAssistant"
+            "LanTransfer"
         );
 
         /// <summary>

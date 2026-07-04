@@ -1,6 +1,6 @@
 using System;
 
-namespace FileTransferAssistant.Models
+namespace LanTransfer.Models
 {
     /// <summary>
     /// Describes a file received by the assistant.

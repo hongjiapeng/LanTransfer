@@ -1,6 +1,6 @@
 using System;
 
-namespace FileTransferAssistant.Models
+namespace LanTransfer.Models
 {
     /// <summary>
     /// Represents a message sent from the device.

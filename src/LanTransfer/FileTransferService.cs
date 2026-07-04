@@ -1,5 +1,5 @@
-using FileTransferAssistant.Handlers;
-using FileTransferAssistant.Models;
+using LanTransfer.Handlers;
+using LanTransfer.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +15,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace FileTransferAssistant
+namespace LanTransfer
 {
     /// <summary>
     /// Hosts a browser-based LAN file transfer service.

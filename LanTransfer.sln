@@ -2,11 +2,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11415.280 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTransferAssistant", "src\FileTransferAssistant\FileTransferAssistant.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer", "src\LanTransfer\LanTransfer.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTransferAssistant.Sample", "src\FileTransferAssistant.Sample\FileTransferAssistant.Sample.csproj", "{6BB762B9-3872-4C75-9BB2-DA5122493C57}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Sample", "src\LanTransfer.Sample\LanTransfer.Sample.csproj", "{6BB762B9-3872-4C75-9BB2-DA5122493C57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileTransferAssistant.Tests", "tests\FileTransferAssistant.Tests\FileTransferAssistant.Tests.csproj", "{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanTransfer.Tests", "tests\LanTransfer.Tests\LanTransfer.Tests.csproj", "{E7D05B7B-7840-4E61-AD5F-4A68F6264BA3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

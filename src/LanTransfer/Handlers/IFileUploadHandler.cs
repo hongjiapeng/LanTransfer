@@ -1,10 +1,10 @@
-using FileTransferAssistant.Models;
+using LanTransfer.Models;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace FileTransferAssistant.Handlers
+namespace LanTransfer.Handlers
 {
     /// <summary>
     /// Interface for storing and reading transferred files.

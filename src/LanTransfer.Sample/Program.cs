@@ -1,16 +1,16 @@
 using Microsoft.Extensions.Logging;
-using FileTransferAssistant.Handlers;
-using FileTransferAssistant.Models;
+using LanTransfer.Handlers;
+using LanTransfer.Models;
 using System;
 using System.Threading.Tasks;
 
-namespace FileTransferAssistant.Sample
+namespace LanTransfer.Sample
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("=== 文件传输助手 / FileTransferAssistant ===");
+            Console.WriteLine("=== 文件传输助手 / LanTransfer ===");
             Console.WriteLine();
 
             using var loggerFactory = LoggerFactory.Create(builder =>

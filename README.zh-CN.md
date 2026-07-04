@@ -1,8 +1,8 @@
-# FileTransferAssistant
+# LanTransfer
 
 [English](README.md)
 
-FileTransferAssistant 是一个基于 .NET 和浏览器界面的跨平台局域网文件传输助手。
+LanTransfer 是一个基于 .NET 和浏览器界面的跨平台局域网文件传输助手。
 
 你只需要在一台设备上启动接收服务，然后用同一局域网内的手机、平板或电脑打开终端里显示的地址，就可以通过网页上传、下载和管理文件。
 
@@ -35,7 +35,7 @@ FileTransferAssistant 是一个基于 .NET 和浏览器界面的跨平台局域�
 ## 快速开始
 
 ```bash
-dotnet run --project src/FileTransferAssistant.Sample
+dotnet run --project src/LanTransfer.Sample
 ```
 
 启动后，在同一局域网内的另一台设备上打开终端中打印出来的 URL，即可进入文件传输页面。
@@ -43,8 +43,8 @@ dotnet run --project src/FileTransferAssistant.Sample
 ## 作为类库使用
 
 ```csharp
-using FileTransferAssistant;
-using FileTransferAssistant.Models;
+using LanTransfer;
+using LanTransfer.Models;
 using Microsoft.Extensions.Logging;
 
 using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
@@ -112,21 +112,21 @@ var config = new ServiceConfiguration
 ## 项目结构
 
 ```text
-FileTransferAssistant
-├── src/FileTransferAssistant
+LanTransfer
+├── src/LanTransfer
 │   ├── FileTransferService.cs
 │   ├── Handlers
 │   ├── Models
 │   └── wwwroot
-├── src/FileTransferAssistant.Sample
-└── tests/FileTransferAssistant.Tests
+├── src/LanTransfer.Sample
+└── tests/LanTransfer.Tests
 ```
 
 ## 构建与测试
 
 ```bash
-dotnet build FileTransferAssistant.sln
-dotnet test FileTransferAssistant.sln
+dotnet build LanTransfer.sln
+dotnet test LanTransfer.sln
 ```
 
 ## 安全说明
