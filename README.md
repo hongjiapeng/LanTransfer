@@ -109,14 +109,19 @@ On Windows:
 
 ## Release
 
-GitHub Actions automatically creates a GitHub Release when a version tag is pushed:
+Use the release script to test, tag, and push a new version:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+```powershell
+.\scripts\release.ps1 0.1.0
 ```
 
-The release workflow runs tests, publishes self-contained builds, and uploads assets for Windows x64, Linux x64/ARM64, and macOS x64/ARM64.
+The script creates and pushes a `v0.1.0` tag. GitHub Actions then creates a GitHub Release, publishes self-contained builds, and uploads assets for Windows x64, Linux x64/ARM64, and macOS x64/ARM64.
+
+To preview the checks without creating a tag, run:
+
+```powershell
+.\scripts\release.ps1 0.1.0 -DryRun
+```
 
 ## Project Structure
 

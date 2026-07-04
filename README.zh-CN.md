@@ -113,14 +113,19 @@ Windows：
 
 ## 发布版本
 
-推送版本 tag 后，GitHub Actions 会自动创建 GitHub Release：
+使用发布脚本可以自动测试、创建 tag 并推送版本：
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+```powershell
+.\scripts\release.ps1 0.1.0
 ```
 
-发布流程会先运行测试，然后生成自包含发布包，并上传 Windows x64、Linux x64/ARM64、macOS x64/ARM64 版本。
+脚本会创建并推送 `v0.1.0` tag。GitHub Actions 随后会自动创建 GitHub Release，生成自包含发布包，并上传 Windows x64、Linux x64/ARM64、macOS x64/ARM64 版本。
+
+如果只想预览检查流程、不创建 tag，可以运行：
+
+```powershell
+.\scripts\release.ps1 0.1.0 -DryRun
+```
 
 ## 项目结构
 
