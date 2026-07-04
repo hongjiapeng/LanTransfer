@@ -261,19 +261,25 @@ button {
 }
 
 .message-row {
+    min-width: 0;
+    width: 100%;
+    max-width: min(86vw, 430px);
     display: grid;
-    grid-template-columns: minmax(0, 390px) 46px;
+    grid-template-columns: minmax(0, 1fr) 46px;
     align-items: center;
     gap: 10px;
+    justify-self: start;
 }
 
 .message-row.outgoing {
-    grid-template-columns: 46px minmax(0, 390px);
+    grid-template-columns: 46px minmax(0, 1fr);
     align-self: flex-end;
+    justify-self: end;
 }
 
 .message-row.incoming {
     align-self: flex-start;
+    justify-self: start;
 }
 
 .message-time {
@@ -289,6 +295,8 @@ button {
 
 .file-card {
     min-width: 0;
+    width: 100%;
+    max-width: 100%;
     display: grid;
     grid-template-columns: 62px minmax(0, 1fr);
     gap: 14px;
@@ -298,6 +306,10 @@ button {
     border-radius: 8px;
     background: var(--bubble);
     box-shadow: var(--card-shadow);
+}
+
+.file-card > * {
+    min-width: 0;
 }
 
 .outgoing .file-card {
