@@ -36,6 +36,7 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     private readonly bool _enabled;
     private Thread? _thread;
     private IntPtr _windowHandle;
+    private IntPtr _trayIcon;
     private WindowProcedure? _windowProcedure;
     private bool _disposed;
 
@@ -135,6 +136,7 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
                 throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not create the tray window.");
             }
 
+            _trayIcon = TryCreateTrayIcon();
             var iconData = CreateIconData(_windowHandle);
             if (!ShellNotifyIcon(NimAdd, ref iconData))
             {
@@ -154,6 +156,11 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         finally
         {
             RemoveTrayIcon();
+            if (_trayIcon != IntPtr.Zero)
+            {
+                DestroyIcon(_trayIcon);
+                _trayIcon = IntPtr.Zero;
+            }
             _windowHandle = IntPtr.Zero;
         }
     }
@@ -238,7 +245,7 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         }
     }
 
-    private static NotifyIconData CreateIconData(IntPtr window)
+    private NotifyIconData CreateIconData(IntPtr window)
     {
         return new NotifyIconData
         {
@@ -247,9 +254,165 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
             Id = 1,
             Flags = NifMessage | NifIcon | NifTip,
             CallbackMessage = TrayCallbackMessage,
-            Icon = LoadIcon(IntPtr.Zero, IdiApplication),
+            Icon = _trayIcon != IntPtr.Zero ? _trayIcon : LoadIcon(IntPtr.Zero, IdiApplication),
             Tip = "LanTransfer"
         };
+    }
+
+    private IntPtr TryCreateTrayIcon()
+    {
+        try
+        {
+            return CreateTrayIcon();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(exception, "Could not create the LanTransfer tray artwork; using the Windows default icon.");
+            return IntPtr.Zero;
+        }
+    }
+
+    private static IntPtr CreateTrayIcon()
+    {
+        const int size = 32;
+        var pixels = new byte[size * size * 4];
+
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (IsInsideRoundedSquare(x, y, size, radius: 7))
+                {
+                    SetPixel(pixels, size, x, y, red: 29, green: 111, blue: 242, alpha: 255);
+                }
+            }
+        }
+
+        DrawRectangleOutline(pixels, size, left: 7, top: 7, right: 24, bottom: 20, thickness: 2);
+        FillRectangle(pixels, size, left: 14, top: 21, right: 17, bottom: 24, red: 255, green: 255, blue: 255);
+        FillRectangle(pixels, size, left: 10, top: 25, right: 21, bottom: 27, red: 255, green: 255, blue: 255);
+
+        var bitmapInfo = new BitmapInfo
+        {
+            Header = new BitmapInfoHeader
+            {
+                Size = (uint)Marshal.SizeOf<BitmapInfoHeader>(),
+                Width = size,
+                Height = -size,
+                Planes = 1,
+                BitCount = 32,
+                Compression = 0,
+                SizeImage = (uint)pixels.Length
+            }
+        };
+
+        var screen = GetDC(IntPtr.Zero);
+        var colorBitmap = CreateDIBSection(screen, ref bitmapInfo, 0, out var pixelBuffer, IntPtr.Zero, 0);
+        ReleaseDC(IntPtr.Zero, screen);
+        if (colorBitmap == IntPtr.Zero || pixelBuffer == IntPtr.Zero)
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not create the tray color bitmap.");
+        }
+
+        var maskBitmap = IntPtr.Zero;
+        try
+        {
+            Marshal.Copy(pixels, 0, pixelBuffer, pixels.Length);
+            maskBitmap = CreateBitmap(size, size, 1, 1, new byte[size * size / 8]);
+            if (maskBitmap == IntPtr.Zero)
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not create the tray mask bitmap.");
+            }
+
+            var iconInfo = new IconInfo
+            {
+                IsIcon = true,
+                MaskBitmap = maskBitmap,
+                ColorBitmap = colorBitmap
+            };
+            var icon = CreateIconIndirect(ref iconInfo);
+            if (icon == IntPtr.Zero)
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not create the tray icon.");
+            }
+
+            return icon;
+        }
+        finally
+        {
+            if (maskBitmap != IntPtr.Zero)
+            {
+                DeleteObject(maskBitmap);
+            }
+
+            DeleteObject(colorBitmap);
+        }
+    }
+
+    private static bool IsInsideRoundedSquare(int x, int y, int size, int radius)
+    {
+        if ((x >= radius && x < size - radius) || (y >= radius && y < size - radius))
+        {
+            return true;
+        }
+
+        var centerX = x < radius ? radius : size - radius - 1;
+        var centerY = y < radius ? radius : size - radius - 1;
+        var deltaX = x - centerX;
+        var deltaY = y - centerY;
+        return deltaX * deltaX + deltaY * deltaY <= radius * radius;
+    }
+
+    private static void DrawRectangleOutline(
+        byte[] pixels,
+        int size,
+        int left,
+        int top,
+        int right,
+        int bottom,
+        int thickness)
+    {
+        FillRectangle(pixels, size, left, top, right, top + thickness - 1, 255, 255, 255);
+        FillRectangle(pixels, size, left, bottom - thickness + 1, right, bottom, 255, 255, 255);
+        FillRectangle(pixels, size, left, top, left + thickness - 1, bottom, 255, 255, 255);
+        FillRectangle(pixels, size, right - thickness + 1, top, right, bottom, 255, 255, 255);
+    }
+
+    private static void FillRectangle(
+        byte[] pixels,
+        int size,
+        int left,
+        int top,
+        int right,
+        int bottom,
+        byte red,
+        byte green,
+        byte blue)
+    {
+        for (var y = top; y <= bottom; y++)
+        {
+            for (var x = left; x <= right; x++)
+            {
+                SetPixel(pixels, size, x, y, red, green, blue, alpha: 255);
+            }
+        }
+    }
+
+    private static void SetPixel(
+        byte[] pixels,
+        int size,
+        int x,
+        int y,
+        byte red,
+        byte green,
+        byte blue,
+        byte alpha)
+    {
+        var index = (y * size + x) * 4;
+        pixels[index] = blue;
+        pixels[index + 1] = green;
+        pixels[index + 2] = red;
+        pixels[index + 3] = alpha;
     }
 
     private delegate IntPtr WindowProcedure(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
@@ -317,6 +480,41 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         public int Y;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct BitmapInfoHeader
+    {
+        public uint Size;
+        public int Width;
+        public int Height;
+        public ushort Planes;
+        public ushort BitCount;
+        public uint Compression;
+        public uint SizeImage;
+        public int XPelsPerMeter;
+        public int YPelsPerMeter;
+        public uint ColorsUsed;
+        public uint ColorsImportant;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct BitmapInfo
+    {
+        public BitmapInfoHeader Header;
+        public uint Colors;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct IconInfo
+    {
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool IsIcon;
+
+        public uint HotspotX;
+        public uint HotspotY;
+        public IntPtr MaskBitmap;
+        public IntPtr ColorBitmap;
+    }
+
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr GetModuleHandle(string? moduleName);
 
@@ -353,6 +551,40 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
 
     [DllImport("user32.dll")]
     private static extern IntPtr LoadIcon(IntPtr instance, IntPtr iconName);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr CreateIconIndirect(ref IconInfo iconInfo);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DestroyIcon(IntPtr icon);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetDC(IntPtr window);
+
+    [DllImport("user32.dll")]
+    private static extern int ReleaseDC(IntPtr window, IntPtr deviceContext);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    private static extern IntPtr CreateDIBSection(
+        IntPtr deviceContext,
+        ref BitmapInfo bitmapInfo,
+        uint usage,
+        out IntPtr bits,
+        IntPtr section,
+        uint offset);
+
+    [DllImport("gdi32.dll", SetLastError = true)]
+    private static extern IntPtr CreateBitmap(
+        int width,
+        int height,
+        uint planes,
+        uint bitsPerPixel,
+        byte[] bits);
+
+    [DllImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DeleteObject(IntPtr graphicObject);
 
     [DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW", CharSet = CharSet.Unicode)]
     [return: MarshalAs(UnmanagedType.Bool)]

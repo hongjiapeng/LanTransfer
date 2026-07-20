@@ -37,7 +37,7 @@ The current application makes users manually discover and type the LAN URL, tran
 | FR-15 | Text messages are limited to 4,000 characters, stored locally, returned by authenticated APIs, and rendered safely as plain text in chronological order with files. | Prevents abuse and makes messages visible after reload/on another device. | AC-16, AC-17 |
 | FR-16 | On desktop/tablet widths the outer surface uses the full viewport height with a centered, width-limited content column; on phones it remains a full-screen layout. | Uses large displays without stretching message content excessively. | AC-18 |
 | FR-17 | After the server starts, it opens its localhost URL once in the default browser. This can be disabled by configuration. | Provides consumer-friendly startup. | AC-19 |
-| FR-18 | Windows builds use a windowed executable, add a native tray icon with Open and Exit actions, and keep the server alive when the browser closes. macOS/Linux builds remain normal console hosts and do not load Windows APIs. | Hides developer-facing console while preserving cross-platform publication. | AC-20, AC-21 |
+| FR-18 | Windows builds use a windowed executable, add a native LanTransfer tray icon with Open and Exit actions, and keep the server alive when the browser closes. macOS/Linux builds remain normal console hosts and do not load Windows APIs. | Hides developer-facing console while preserving cross-platform publication. | AC-20, AC-21 |
 | FR-19 | Existing upload, download, localization, token authorization, storage safety, and release targets continue to work. | Prevents regressions. | AC-22 |
 
 ## UX behavior
@@ -57,6 +57,7 @@ The current application makes users manually discover and type the LAN URL, tran
 - Text persistence lives under a hidden state subdirectory of the configured storage root so it does not appear in the file list.
 - Use `QRCoder` 1.8.0 for standards-compliant, local SVG QR generation. It is MIT licensed, has no non-framework runtime dependencies, and supports .NET 10.
 - Windows tray support uses runtime-gated Win32 interop in the Host. No Windows-only assembly may be loaded on macOS/Linux.
+- The tray artwork is drawn deterministically in memory as a transparent blue rounded tile with a white monitor glyph, with the Windows application icon as a non-fatal fallback.
 - Apply `templates/dotnet-engineering-guidelines.md` from the `spec-driven-delivery` skill.
 
 ## Edge cases

@@ -25,6 +25,7 @@
 - [x] Host opens the local URL once after Kestrel starts.
 - [x] `OpenBrowserOnStart=false` prevents browser launch.
 - [ ] Windows publish shows no console and has tray Open/Exit actions. (Windowless process and tray creation were exercised; final menu click remains a manual OS check.)
+- [x] Windows tray creates the LanTransfer blue monitor icon without falling back to the generic Windows application icon.
 - [x] Tray/browser failures do not terminate Kestrel.
 - [x] Linux/macOS builds do not load or call Windows native APIs.
 

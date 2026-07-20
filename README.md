@@ -17,7 +17,7 @@ LanTransfer is a cross-platform LAN file and text transfer tool powered by .NET 
 - Configurable port, storage directory, upload size limit, and optional access token
 - Lightweight English and Simplified Chinese web UI localization
 - Default-browser launch after startup
-- Native Open/Exit tray menu and no console window on Windows; unchanged console behavior on macOS/Linux
+- Native LanTransfer icon with an Open/Exit tray menu and no console window on Windows; unchanged console behavior on macOS/Linux
 
 ## Screenshot
 
