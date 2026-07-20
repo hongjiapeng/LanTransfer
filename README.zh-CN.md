@@ -2,14 +2,15 @@
 
 [English](./README.md)
 
-LanTransfer 是一个跨平台局域网文件传输工具。你可以在一台设备上启动 `lantransfer` 控制台接收端，然后在同一局域网内通过手机、平板或电脑浏览器访问页面，快速上传和下载文件。
+LanTransfer 是一个跨平台局域网文件和文字传输工具。在一台设备上启动 `lantransfer` 后，可通过页面中的局域网二维码让手机、平板或另一台电脑快速打开连接。
 
 在同一局域网内，在手机、平板和电脑之间快速传输文件。
 
 ## 功能特性
 
-- 基于浏览器的局域网上传和下载
-- 名为 `lantransfer` 的跨平台控制台 Host
+- 基于浏览器的局域网文件上传、下载和纯文字备注
+- 本地生成连接二维码，并支持在多网卡地址间切换
+- 名为 `lantransfer` 的跨平台 Host
 - 基于 ASP.NET Core Kestrel 的接收端服务，默认使用局域网 HTTP
 - 纯 HTML/CSS/JavaScript 静态页面，不需要前端构建系统
 - 面向手机、平板和桌面的聊天式文件传输界面
@@ -17,6 +18,8 @@ LanTransfer 是一个跨平台局域网文件传输工具。你可以在一台�
 - 文件名安全处理、路径穿越防护、同名文件自动生成可读名称
 - 支持配置端口、存储目录、上传大小限制和可选访问令牌
 - 前端支持 English / 简体中文轻量多语言
+- 启动完成后自动使用默认浏览器打开页面
+- Windows 原生托盘“打开/退出”菜单并隐藏控制台；macOS/Linux 保持控制台行为
 
 ## 界面截图
 
@@ -44,7 +47,7 @@ LanTransfer 是一个跨平台局域网文件传输工具。你可以在一台�
 dotnet run --project src/LanTransfer.Host
 ```
 
-LanTransfer 会监听 `http://0.0.0.0:8765`，并在启动日志中打印本机和局域网访问地址。
+LanTransfer 会监听 `http://0.0.0.0:8765`，并自动用默认浏览器打开本机页面。点击页面菜单中的“连接新设备”，即可显示检测到的局域网地址二维码。
 
 打开以下地址之一：
 
@@ -63,6 +66,9 @@ LanTransfer 从 `src/LanTransfer.Host/appsettings.json` 的 `LanTransfer` 节读
     "Port": 8765,
     "StorageDirectory": "uploads",
     "MaxFileSizeBytes": 1073741824,
+    "MaxMessageLength": 4000,
+    "OpenBrowserOnStart": true,
+    "EnableWindowsTray": true,
     "AccessToken": null
   }
 }
@@ -86,11 +92,15 @@ dotnet run --project src/LanTransfer.Host
 ## API 概览
 
 - `GET /api/health`：返回服务状态和设备名称。
+- `GET /api/connect`：返回可用的局域网连接地址。
+- `GET /api/connect/qr?url=...`：返回本地生成的 SVG 二维码。
+- `GET /api/messages`：列出纯文字备注。
+- `POST /api/messages`：发送纯文字备注。
 - `POST /api/files/upload`：上传一个名为 `file` 的 multipart 文件字段。
 - `GET /api/files`：获取已接收文件列表。
 - `GET /api/files/{fileName}`：下载指定文件。
 
-错误响应使用稳定的 `errorCode`，例如 `file_too_large`、`file_not_found`、`invalid_file_name`、`unauthorized`、`upload_failed`、`network_error`。
+错误响应使用稳定的 `errorCode`，例如 `file_too_large`、`invalid_file_name`、`invalid_message`、`unauthorized`、`upload_failed`、`network_error`。
 
 ## 从源码构建
 
@@ -146,11 +156,10 @@ LanTransfer/
 
 ## 路线图
 
-- 配对码流程
-- 用二维码打开局域网访问地址
+- 可选的限时配对码确认流程
 - 已接收文件删除与重命名
 - 更好的图片/文件缩略图
-- 桌面托盘应用与系统通知
+- 桌面系统通知
 - 面向非可信网络的更强认证方案
 
 ## 许可证

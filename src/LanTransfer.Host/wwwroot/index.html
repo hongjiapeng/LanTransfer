@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LanTransfer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23171717'/%3E%3Crect x='14' y='15' width='36' height='26' rx='2' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M24 50h16M32 41v9' stroke='white' stroke-width='4'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -18,8 +19,12 @@
                     <p><span class="status-dot"></span><span data-i18n="device.connected">Connected, ready to transfer files</span></p>
                 </div>
                 <details class="more-menu">
-                    <summary aria-label="More options"><span aria-hidden="true">⋯</span></summary>
-                    <div class="menu-panel">
+                    <summary data-i18n-title="menu.more" title="More options" aria-label="More options"><span aria-hidden="true">⋯</span></summary>
+                    <form class="menu-panel">
+                        <button id="connectButton" class="menu-action" type="button">
+                            <span aria-hidden="true">▣</span>
+                            <span data-i18n="connect.action">Connect new device</span>
+                        </button>
                         <label>
                             <span data-i18n="language.label">Language</span>
                             <select id="languageSelect">
@@ -31,7 +36,7 @@
                             <span data-i18n="accessToken.label">Access token</span>
                             <input id="tokenInput" type="password" autocomplete="off" data-i18n-placeholder="accessToken.placeholder" placeholder="Optional token">
                         </label>
-                    </div>
+                    </form>
                 </details>
             </header>
 
@@ -48,17 +53,36 @@
             <footer class="composer">
                 <input id="fileInput" type="file" multiple>
                 <button id="chooseButton" class="add-button" type="button" data-i18n-title="upload.selectFiles" title="Choose files" aria-label="Choose files">+</button>
-                <button id="dropZone" class="drop-target" type="button">
-                    <span class="desktop-hint" data-i18n="upload.dropHint">Drag files here, or choose files</span>
-                    <span class="mobile-hint" data-i18n="upload.mobileHint">Choose files to send</span>
-                </button>
-                <button id="sendButton" class="send-button" type="button" data-i18n-title="upload.selectFiles" title="Send selected files" aria-label="Send selected files">➤</button>
+                <textarea id="messageInput" class="message-input" rows="1" maxlength="4000" data-i18n-placeholder="composer.placeholder" placeholder="Enter a note or send a file" aria-label="Enter a note or send a file"></textarea>
+                <button id="sendButton" class="send-button" type="button" data-i18n-title="composer.send" title="Send" aria-label="Send">➤</button>
                 <p class="local-note"><span class="note-lock" aria-hidden="true">🔒</span><span data-i18n="footer.localNetworkOnly">Transfer only on your local network</span></p>
             </footer>
 
             <div class="toast" id="toast" hidden></div>
         </section>
     </main>
+
+    <dialog id="connectDialog" class="connect-dialog" aria-labelledby="connectTitle">
+        <form method="dialog" class="dialog-surface">
+            <button class="dialog-close" type="submit" value="close" data-i18n-title="connect.close" title="Close" aria-label="Close">×</button>
+            <header>
+                <h2 id="connectTitle" data-i18n="connect.title">Connect new device</h2>
+                <p data-i18n="connect.description">Scan with a phone on the same local network to open this page.</p>
+            </header>
+            <div id="connectLoading" class="connect-loading" data-i18n="connect.loading">Finding local network addresses…</div>
+            <div id="connectContent" class="connect-content" hidden>
+                <img id="connectQr" class="connect-qr" alt="Connection QR code">
+                <label class="connect-address-field">
+                    <span data-i18n="connect.address">Connection address</span>
+                    <select id="connectUrlSelect"></select>
+                </label>
+                <output id="connectUrl" class="connect-url"></output>
+                <button id="copyConnectUrl" class="copy-link-button" type="button" data-i18n="connect.copy">Copy link</button>
+                <p id="connectHelp" class="connect-help" data-i18n="connect.help">Both devices must be on the same local network. If one address does not open, try another.</p>
+            </div>
+            <p id="connectError" class="connect-error" hidden></p>
+        </form>
+    </dialog>
 
     <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>

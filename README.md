@@ -2,12 +2,13 @@
 
 [中文文档](./README.zh-CN.md)
 
-LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a browser-based UI. Run the `lantransfer` console host on one device, open the shown LAN URL from another phone, tablet, or computer on the same local network, then upload and download files through a clean transfer page.
+LanTransfer is a cross-platform LAN file and text transfer tool powered by .NET and a browser-based UI. Run `lantransfer` on one device, then scan its local QR code from another phone, tablet, or computer on the same network.
 
 ## Features
 
-- Browser-based LAN file upload and download
-- Cross-platform console host named `lantransfer`
+- Browser-based LAN file upload/download and plain-text notes
+- Local QR connection dialog with multi-adapter address selection
+- Cross-platform host named `lantransfer`
 - ASP.NET Core Kestrel receiver using HTTP by default for LAN access
 - Static HTML/CSS/JavaScript UI with no frontend build system
 - Chat-style file transfer interface for phones, tablets, and desktops
@@ -15,6 +16,8 @@ LanTransfer is a cross-platform LAN file transfer tool powered by .NET and a bro
 - Safe file-name handling, path traversal protection, and readable duplicate names
 - Configurable port, storage directory, upload size limit, and optional access token
 - Lightweight English and Simplified Chinese web UI localization
+- Default-browser launch after startup
+- Native Open/Exit tray menu and no console window on Windows; unchanged console behavior on macOS/Linux
 
 ## Screenshot
 
@@ -40,7 +43,7 @@ Network:
 dotnet run --project src/LanTransfer.Host
 ```
 
-LanTransfer listens on `http://0.0.0.0:8765` and prints local and LAN URLs at startup.
+LanTransfer listens on `http://0.0.0.0:8765` and opens the local page in your default browser. Use **Connect new device** in the page menu to show a QR code for each detected LAN address.
 
 Open one of these URLs:
 
@@ -59,6 +62,9 @@ LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettin
     "Port": 8765,
     "StorageDirectory": "uploads",
     "MaxFileSizeBytes": 1073741824,
+    "MaxMessageLength": 4000,
+    "OpenBrowserOnStart": true,
+    "EnableWindowsTray": true,
     "AccessToken": null
   }
 }
@@ -82,11 +88,15 @@ dotnet run --project src/LanTransfer.Host
 ## API Overview
 
 - `GET /api/health` returns service status and device name.
+- `GET /api/connect` returns usable LAN connection URLs.
+- `GET /api/connect/qr?url=...` returns a locally generated SVG QR code.
+- `GET /api/messages` lists plain-text notes.
+- `POST /api/messages` sends a plain-text note.
 - `POST /api/files/upload` uploads one multipart file field named `file`.
 - `GET /api/files` lists received files.
 - `GET /api/files/{fileName}` downloads a received file.
 
-Error responses use stable `errorCode` values such as `file_too_large`, `file_not_found`, `invalid_file_name`, `unauthorized`, `upload_failed`, and `network_error`.
+Error responses use stable `errorCode` values such as `file_too_large`, `invalid_file_name`, `invalid_message`, `unauthorized`, `upload_failed`, and `network_error`.
 
 ## Build from Source
 
@@ -142,11 +152,10 @@ LanTransfer/
 
 ## Roadmap
 
-- Pairing code flow
-- QR code for opening the LAN URL
+- Optional expiring pairing-code approval flow
 - Delete and rename actions for received files
 - Better image/file thumbnails
-- Desktop tray app and notifications
+- Desktop notifications
 - Stronger authentication for non-trusted networks
 
 ## License

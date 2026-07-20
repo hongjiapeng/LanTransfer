@@ -1,58 +1,54 @@
-# LanTransfer Acceptance Checklist
+# Acceptance Checklist: Device connection, text transfer, and desktop startup
 
-## Functional Verification
+## Functional verification
 
-- [x] Project structure contains `src/LanTransfer.Core`, `src/LanTransfer.Host`, and `tests/LanTransfer.Tests`.
-- [x] Host is a console executable project named `lantransfer`.
-- [x] Core can save files without loading the entire file into memory.
-- [x] Uploads use `.uploading` temp files and avoid overwriting existing files.
-- [x] Duplicate names use `photo (1).jpg` style.
-- [x] File list returns file name, size, last modified time, and download URL.
-- [x] Missing files produce `file_not_found`.
-- [x] Invalid filenames and traversal attempts produce `invalid_file_name`.
-- [x] Oversized uploads produce `file_too_large`.
-- [x] AccessToken is optional and enforced on upload/list/download when configured.
+- [x] More menu opens a localized Connect new device dialog.
+- [x] Displayed URL, selected URL, copied URL, and QR source URL match.
+- [x] Multiple usable IPv4 addresses can be selected.
+- [x] Access token is safely included when configured.
+- [x] Composer placeholder is “Enter a note or send a file” / “输入备注或发送文件”.
+- [x] Enter sends text; Shift+Enter preserves a newline; add button uploads files.
+- [x] Empty and oversized text are rejected; HTML-like text is rendered literally.
+- [x] Text persists across refresh and appears in a second browser through polling.
+- [x] Existing file upload/download APIs still work.
 
-## UI Verification
+## UI verification
 
-- [x] One `index.html` is used for both English and Simplified Chinese.
-- [x] Desktop layout uses a centered transfer window.
-- [x] Mobile layout uses a full-screen chat-style surface.
-- [x] Existing files render on the left as downloadable file cards.
-- [x] Uploading files render on the right with progress.
-- [x] Upload success renders `Sent` / `已发送`.
-- [x] Upload failure renders localized inline/toast feedback.
-- [x] Empty state is text-only and understated.
-- [ ] Manual visual review on real phone viewport.
+- [x] Dialog has label, close behavior, keyboard focus, QR alt text, URL selector, copy action, and help/error state.
+- [x] Empty, loading, invalid input, unauthorized, network, and clipboard failure states are understandable.
+- [x] At 1920x1080 the transfer surface fills the viewport height and the timeline alone scrolls.
+- [x] At 390x844 header, timeline, modal, and composer remain usable with safe-area padding.
+- [x] Desktop message/file content stays width-limited rather than stretching edge to edge.
 
-## Error Handling Verification
+## Desktop lifecycle verification
 
-- [x] `../evil.txt` is rejected.
-- [x] `..\evil.txt` is rejected.
-- [x] Absolute paths are rejected.
-- [x] URL-encoded traversal is rejected.
-- [x] Failed upload temp files are cleaned best-effort.
-- [x] Backend responses use stable error codes.
-- [x] Frontend maps backend error codes to localized messages.
+- [x] Host opens the local URL once after Kestrel starts.
+- [x] `OpenBrowserOnStart=false` prevents browser launch.
+- [ ] Windows publish shows no console and has tray Open/Exit actions. (Windowless process and tray creation were exercised; final menu click remains a manual OS check.)
+- [x] Tray/browser failures do not terminate Kestrel.
+- [x] Linux/macOS builds do not load or call Windows native APIs.
 
-## Build/Test Verification
+## Error and security verification
 
-- [x] Build passes: `dotnet build LanTransfer.sln`
-- [x] Tests pass: `dotnet test LanTransfer.sln`
-- [x] No `bin`, `obj`, `uploads`, or `.uploading` files are tracked.
-- [x] No old forbidden names remain in source text.
+- [x] Connect and message APIs preserve optional token authorization.
+- [x] QR SVG is generated locally with no third-party network call.
+- [x] Text is length-limited, trimmed, JSON serialized, and inserted with DOM text APIs.
+- [x] Concurrent writes do not corrupt the message store.
+- [x] Logs and responses do not expose file contents or unencoded secrets beyond the intentionally shareable connect URL.
 
-## Regression Checks
+## Build/test verification
 
-- [x] README links between English and Chinese docs are present.
-- [x] `appsettings.json` contains required `LanTransfer` options.
-- [x] Core project does not reference ASP.NET Core.
-- [x] Host serves static files from `wwwroot`.
+- [x] `dotnet build LanTransfer.sln`
+- [x] `dotnet test LanTransfer.sln --no-build`
+- [x] Windows and Linux publish compile checks pass.
+- [x] Root URL and all static assets work from built/published output.
+- [x] No unrelated files, generated build output, or uploaded user data are tracked.
 
-## Manual Verification Steps
+## Manual flow
 
-1. Run `dotnet run --project src/LanTransfer.Host`.
-2. Open `http://localhost:8765`.
-3. Upload a small file and confirm it appears as a sent bubble.
-4. Refresh and confirm it appears as a downloadable received bubble.
-5. Open `http://localhost:8765?lang=zh-CN` and confirm Chinese UI text.
+1. Start with browser auto-open enabled; confirm one tab opens.
+2. Open Connect new device, scan from a same-LAN phone, and load the page.
+3. Send text in each direction and verify it appears without manually reloading.
+4. Upload and download one image and one non-image file.
+5. Resize to 1920x1080 and 390x844; verify only the timeline scrolls.
+6. On Windows, close the browser, reopen from tray, then Exit and confirm the Host stops.

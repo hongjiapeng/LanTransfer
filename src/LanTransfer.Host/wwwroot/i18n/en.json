@@ -20,6 +20,26 @@
     "success": "File sent.",
     "failed": "Failed"
   },
+  "menu": {
+    "more": "More options"
+  },
+  "composer": {
+    "placeholder": "Enter a note or send a file",
+    "send": "Send"
+  },
+  "connect": {
+    "action": "Connect new device",
+    "title": "Connect new device",
+    "description": "Scan with a phone on the same local network to open this page.",
+    "loading": "Finding local network addresses…",
+    "address": "Connection address",
+    "copy": "Copy link",
+    "copied": "Connection link copied.",
+    "help": "Both devices must be on the same local network. If one address does not open, try another.",
+    "localhostWarning": "No LAN address was found. Localhost only works on this computer.",
+    "qrAlt": "QR code containing the selected LanTransfer address",
+    "close": "Close"
+  },
   "files": {
     "title": "Files",
     "empty": "No files yet",
@@ -36,6 +56,10 @@
     "invalidFileName": "File name is invalid.",
     "unauthorized": "Unauthorized.",
     "uploadFailed": "File upload failed.",
+    "invalidMessage": "Enter between 1 and 4,000 characters.",
+    "messageFailed": "Message could not be saved.",
+    "noConnectAddress": "No connection address is available.",
+    "copyFailed": "The link could not be copied.",
     "networkError": "Network error."
   },
   "language": {

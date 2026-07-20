@@ -1,7 +1,9 @@
 const state = {
-    selectedFiles: [],
     accessToken: '',
-    isUploading: false
+    isUploading: false,
+    isSendingMessage: false,
+    sentMessageIds: new Set(),
+    connectUrls: []
 };
 
 const dom = {
@@ -11,10 +13,21 @@ const dom = {
     fileInput: document.getElementById('fileInput'),
     chooseButton: document.getElementById('chooseButton'),
     sendButton: document.getElementById('sendButton'),
-    dropZone: document.getElementById('dropZone'),
+    messageInput: document.getElementById('messageInput'),
     languageSelect: document.getElementById('languageSelect'),
     tokenInput: document.getElementById('tokenInput'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    moreMenu: document.querySelector('.more-menu'),
+    connectButton: document.getElementById('connectButton'),
+    connectDialog: document.getElementById('connectDialog'),
+    connectLoading: document.getElementById('connectLoading'),
+    connectContent: document.getElementById('connectContent'),
+    connectError: document.getElementById('connectError'),
+    connectQr: document.getElementById('connectQr'),
+    connectUrlSelect: document.getElementById('connectUrlSelect'),
+    connectUrl: document.getElementById('connectUrl'),
+    connectHelp: document.getElementById('connectHelp'),
+    copyConnectUrl: document.getElementById('copyConnectUrl')
 };
 
 function t(key, params) {
@@ -30,8 +43,10 @@ function withToken(url) {
     return `${url}${separator}token=${encodeURIComponent(state.accessToken)}`;
 }
 
-function authHeaders() {
-    return state.accessToken ? { 'X-LanTransfer-Token': state.accessToken } : {};
+function authHeaders(extra = {}) {
+    return state.accessToken
+        ? { ...extra, 'X-LanTransfer-Token': state.accessToken }
+        : extra;
 }
 
 async function readError(response) {
@@ -43,18 +58,10 @@ async function readError(response) {
     }
 }
 
-async function getHealth() {
-    const response = await fetch('/api/health');
-    if (!response.ok) {
-        throw new Error('network_error');
-    }
-
-    return response.json();
-}
-
-async function listFiles() {
-    const response = await fetch(withToken('/api/files'), {
-        headers: authHeaders()
+async function fetchJson(url, options = {}) {
+    const response = await fetch(withToken(url), {
+        ...options,
+        headers: authHeaders(options.headers || {})
     });
 
     if (!response.ok) {
@@ -100,13 +107,18 @@ function uploadFile(file, onProgress) {
     });
 }
 
+function createTime(value) {
+    const time = document.createElement('time');
+    time.className = 'message-time';
+    time.dateTime = new Date(value).toISOString();
+    time.textContent = formatTime(value);
+    return time;
+}
+
 function renderFileMessage(file, direction = 'incoming') {
     const row = document.createElement('article');
     row.className = `message-row ${direction}`;
-
-    const time = document.createElement('time');
-    time.className = 'message-time';
-    time.textContent = formatTime(file.lastModifiedTime || new Date());
+    const time = createTime(file.lastModifiedTime || new Date());
 
     const card = document.createElement('div');
     card.className = 'file-card';
@@ -140,25 +152,29 @@ function renderFileMessage(file, direction = 'incoming') {
 
     content.append(title, meta, action);
     card.append(visual, content);
-
-    if (direction === 'outgoing') {
-        row.append(time, card);
-    } else {
-        row.append(card, time);
-    }
-
+    row.append(...(direction === 'outgoing' ? [time, card] : [card, time]));
     dom.timeline.appendChild(row);
-    dom.timeline.scrollTop = dom.timeline.scrollHeight;
     return row;
+}
+
+function renderTextMessage(message) {
+    const direction = state.sentMessageIds.has(message.id) ? 'outgoing' : 'incoming';
+    const row = document.createElement('article');
+    row.className = `message-row ${direction}`;
+
+    const time = createTime(message.createdAt);
+    const card = document.createElement('div');
+    card.className = 'text-card';
+    card.textContent = message.text;
+
+    row.append(...(direction === 'outgoing' ? [time, card] : [card, time]));
+    dom.timeline.appendChild(row);
 }
 
 function renderUploadMessage(file) {
     const row = document.createElement('article');
     row.className = 'message-row outgoing';
-
-    const time = document.createElement('time');
-    time.className = 'message-time';
-    time.textContent = formatTime(new Date());
+    const time = createTime(new Date());
 
     const card = document.createElement('div');
     card.className = 'file-card';
@@ -174,7 +190,6 @@ function renderUploadMessage(file) {
 
     const action = document.createElement('div');
     action.className = 'file-action';
-
     const progress = document.createElement('div');
     progress.className = 'progress-track';
     const bar = document.createElement('div');
@@ -184,10 +199,11 @@ function renderUploadMessage(file) {
     const status = document.createElement('span');
     status.className = 'status-text';
     status.textContent = t('upload.sending', { percent: 0 });
-
     action.append(progress, status);
     content.append(title, meta, action);
-    card.append(createVisual({ fileName: file.name, downloadUrl: URL.createObjectURL(file), isLocal: true }), content);
+
+    const objectUrl = URL.createObjectURL(file);
+    card.append(createVisual({ fileName: file.name, downloadUrl: objectUrl, isLocal: true }), content);
     row.append(time, card);
     dom.timeline.appendChild(row);
     dom.timeline.scrollTop = dom.timeline.scrollHeight;
@@ -198,13 +214,14 @@ function renderUploadMessage(file) {
             status.textContent = t('upload.sending', { percent });
         },
         setSent(result) {
-            URL.revokeObjectURL(card.querySelector('img')?.src || '');
+            URL.revokeObjectURL(objectUrl);
             status.textContent = `✓ ${t('upload.sent')}`;
             progress.remove();
             title.textContent = result.fileName;
             meta.textContent = `${formatFileSize(result.size)} · ${fileType(result.fileName)}`;
         },
         setFailed(errorCode) {
+            URL.revokeObjectURL(objectUrl);
             status.classList.add('failed');
             status.textContent = t(errorKey(errorCode));
             progress.remove();
@@ -218,9 +235,7 @@ function createVisual(file) {
         img.className = 'file-thumb';
         img.alt = '';
         img.src = file.isLocal ? file.downloadUrl : withToken(file.downloadUrl);
-        img.addEventListener('error', () => {
-            img.replaceWith(createFileIcon(file.fileName));
-        }, { once: true });
+        img.addEventListener('error', () => img.replaceWith(createFileIcon(file.fileName)), { once: true });
         return img;
     }
 
@@ -236,20 +251,42 @@ function createFileIcon(fileName) {
 
 async function refreshHealth() {
     try {
-        const health = await getHealth();
+        const health = await fetchJson('/api/health');
         dom.deviceName.textContent = health.deviceName || t('device.defaultName');
     } catch {
         dom.deviceName.textContent = t('device.defaultName');
     }
 }
 
-async function refreshFiles() {
+async function refreshTimeline({ preserveScroll = false } = {}) {
+    if (state.isUploading || state.isSendingMessage) {
+        return;
+    }
+
+    const wasNearBottom = dom.timeline.scrollHeight - dom.timeline.scrollTop - dom.timeline.clientHeight < 80;
     try {
-        const files = await listFiles();
+        const [files, messages] = await Promise.all([
+            fetchJson('/api/files'),
+            fetchJson('/api/messages')
+        ]);
+
+        const items = [
+            ...files.map(file => ({ kind: 'file', timestamp: file.lastModifiedTime, value: file })),
+            ...messages.map(message => ({ kind: 'message', timestamp: message.createdAt, value: message }))
+        ].sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
+
         dom.timeline.replaceChildren();
-        dom.emptyState.hidden = files.length > 0;
-        for (const file of [...files].reverse()) {
-            renderFileMessage(file, 'incoming');
+        dom.emptyState.hidden = items.length > 0;
+        for (const item of items) {
+            if (item.kind === 'file') {
+                renderFileMessage(item.value, 'incoming');
+            } else {
+                renderTextMessage(item.value);
+            }
+        }
+
+        if (!preserveScroll || wasNearBottom) {
+            dom.timeline.scrollTop = dom.timeline.scrollHeight;
         }
     } catch (error) {
         showToast(t(errorKey(error.message)), true);
@@ -278,53 +315,159 @@ async function sendFiles(files) {
 
     state.isUploading = false;
     dom.fileInput.value = '';
+    await refreshTimeline();
 }
 
-function chooseFiles() {
-    dom.fileInput.click();
+async function sendText() {
+    const text = dom.messageInput.value.trim();
+    if (!text || state.isSendingMessage) {
+        if (!text) {
+            showToast(t('errors.invalidMessage'), true);
+        }
+        return;
+    }
+
+    state.isSendingMessage = true;
+    dom.sendButton.disabled = true;
+    try {
+        const message = await fetchJson('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        state.sentMessageIds.add(message.id);
+        persistSentMessageIds();
+        dom.messageInput.value = '';
+        resizeMessageInput();
+    } catch (error) {
+        showToast(t(errorKey(error.message)), true);
+    } finally {
+        state.isSendingMessage = false;
+        dom.sendButton.disabled = false;
+    }
+
+    await refreshTimeline();
+}
+
+function resizeMessageInput() {
+    dom.messageInput.style.height = '';
+    dom.messageInput.style.height = `${Math.min(dom.messageInput.scrollHeight, 112)}px`;
+}
+
+async function openConnectDialog() {
+    dom.moreMenu.open = false;
+    dom.connectLoading.hidden = false;
+    dom.connectContent.hidden = true;
+    dom.connectError.hidden = true;
+    dom.connectDialog.showModal();
+
+    try {
+        const payload = await fetchJson('/api/connect');
+        state.connectUrls = payload.urls || [];
+        if (state.connectUrls.length === 0) {
+            throw new Error('no_connect_address');
+        }
+
+        dom.connectUrlSelect.replaceChildren();
+        for (const item of state.connectUrls) {
+            const option = document.createElement('option');
+            option.value = item.url;
+            option.textContent = `${item.label} — ${item.url}`;
+            dom.connectUrlSelect.appendChild(option);
+        }
+
+        updateConnectUrl();
+        dom.connectLoading.hidden = true;
+        dom.connectContent.hidden = false;
+    } catch (error) {
+        dom.connectLoading.hidden = true;
+        dom.connectError.textContent = t(errorKey(error.message));
+        dom.connectError.hidden = false;
+    }
+}
+
+function updateConnectUrl() {
+    const url = dom.connectUrlSelect.value;
+    dom.connectUrl.textContent = url;
+    dom.connectUrl.value = url;
+    dom.connectQr.alt = t('connect.qrAlt');
+    dom.connectQr.src = withToken(`/api/connect/qr?url=${encodeURIComponent(url)}`);
+
+    const selected = state.connectUrls.find(item => item.url === url);
+    dom.connectHelp.textContent = selected?.isLanAddress ? t('connect.help') : t('connect.localhostWarning');
+}
+
+async function copyConnectUrl() {
+    const url = dom.connectUrlSelect.value;
+    try {
+        await navigator.clipboard.writeText(url);
+        showToast(t('connect.copied'));
+    } catch {
+        const input = document.createElement('textarea');
+        input.value = url;
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand('copy');
+        input.remove();
+        showToast(t(copied ? 'connect.copied' : 'errors.copyFailed'), !copied);
+    }
 }
 
 function setupEvents() {
-    dom.chooseButton.addEventListener('click', chooseFiles);
-    dom.dropZone.addEventListener('click', chooseFiles);
-    dom.sendButton.addEventListener('click', () => chooseFiles());
+    dom.chooseButton.addEventListener('click', () => dom.fileInput.click());
+    dom.sendButton.addEventListener('click', sendText);
     dom.fileInput.addEventListener('change', event => sendFiles(event.target.files));
+    dom.messageInput.addEventListener('input', resizeMessageInput);
+    dom.messageInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+            event.preventDefault();
+            sendText();
+        }
+    });
 
     for (const eventName of ['dragenter', 'dragover']) {
         document.addEventListener(eventName, event => {
             event.preventDefault();
-            dom.dropZone.classList.add('dragging');
+            dom.messageInput.classList.add('dragging');
         });
     }
 
     for (const eventName of ['dragleave', 'drop']) {
         document.addEventListener(eventName, event => {
             event.preventDefault();
-            dom.dropZone.classList.remove('dragging');
+            dom.messageInput.classList.remove('dragging');
         });
     }
 
-    document.addEventListener('drop', event => {
-        sendFiles(event.dataTransfer.files);
-    });
+    document.addEventListener('drop', event => sendFiles(event.dataTransfer.files));
 
     dom.languageSelect.addEventListener('change', async event => {
         await window.lanTransferI18n.setLanguage(event.target.value);
         renderStaticState();
-        await refreshFiles();
+        await refreshTimeline();
     });
 
-    dom.tokenInput.addEventListener('change', event => {
+    dom.tokenInput.addEventListener('change', async event => {
         state.accessToken = event.target.value.trim();
         localStorage.setItem('lantransfer.token', state.accessToken);
-        refreshFiles();
+        await refreshTimeline();
     });
+
+    dom.connectButton.addEventListener('click', openConnectDialog);
+    dom.connectUrlSelect.addEventListener('change', updateConnectUrl);
+    dom.copyConnectUrl.addEventListener('click', copyConnectUrl);
 }
 
 function renderStaticState() {
     document.title = t('app.title');
+    dom.messageInput.setAttribute('aria-label', t('composer.placeholder'));
     if (!dom.deviceName.textContent || dom.deviceName.textContent === 'DESKTOP-01') {
         dom.deviceName.textContent = t('device.defaultName');
+    }
+    if (dom.connectUrlSelect.value) {
+        updateConnectUrl();
     }
 }
 
@@ -345,10 +488,26 @@ function errorKey(errorCode) {
         invalid_file_name: 'errors.invalidFileName',
         unauthorized: 'errors.unauthorized',
         upload_failed: 'errors.uploadFailed',
+        invalid_message: 'errors.invalidMessage',
+        message_failed: 'errors.messageFailed',
+        no_connect_address: 'errors.noConnectAddress',
         network_error: 'errors.networkError'
     };
-
     return map[errorCode] || 'errors.networkError';
+}
+
+function persistSentMessageIds() {
+    const ids = [...state.sentMessageIds].slice(-500);
+    localStorage.setItem('lantransfer.sentMessageIds', JSON.stringify(ids));
+}
+
+function loadSentMessageIds() {
+    try {
+        const ids = JSON.parse(localStorage.getItem('lantransfer.sentMessageIds') || '[]');
+        state.sentMessageIds = new Set(Array.isArray(ids) ? ids : []);
+    } catch {
+        state.sentMessageIds = new Set();
+    }
 }
 
 function formatFileSize(bytes) {
@@ -379,13 +538,15 @@ async function init() {
     const params = new URLSearchParams(window.location.search);
     state.accessToken = params.get('token') || localStorage.getItem('lantransfer.token') || '';
     dom.tokenInput.value = state.accessToken;
+    loadSentMessageIds();
 
     await window.lanTransferI18n.init();
     dom.languageSelect.value = window.lanTransferI18n.language;
     renderStaticState();
     setupEvents();
     await refreshHealth();
-    await refreshFiles();
+    await refreshTimeline();
+    window.setInterval(() => refreshTimeline({ preserveScroll: true }), 3000);
 }
 
 init();

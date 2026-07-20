@@ -1,101 +1,94 @@
-# LanTransfer Initialization Spec
+# Feature Spec: LanTransfer device connection and text transfer
 
 ## Assumptions
 
-- Target repository: this repository root.
-- Product, solution, executable, and root namespace names are standardized as `LanTransfer`.
-- The first release slice is a browser-based LAN file transfer receiver, not a chat product.
-- .NET 10 remains the target framework; do not downgrade if a local SDK is missing.
-- The Host is a cross-platform console executable that runs ASP.NET Core Kestrel.
+- Target repository: this repository root; no other repository may be modified.
+- The generated product preview is a visual reference, while the second supplied image is a real application screenshot.
+- "Connect new device" means opening this Host's LAN web URL on another device. It does not establish a separate peer-to-peer tunnel or account session.
+- The LAN is trusted. The existing optional access token remains the only access control and is included in generated links when configured.
+- .NET 10 and the existing Core + Host + static frontend architecture remain in place.
 
 ## Non-goals
 
-- No `LanTransfer.Web`, `LanTransfer.Shared`, `LanTransfer.Desktop`, `LanTransfer.Cli`, `LanTransfer.Api`, or `LanTransfer.Infrastructure` projects.
-- No chat message system, WebSocket chat, user login, friends list, database history, cloud sync, file preview editor, video player, or image editor.
-- No React, Vue, Vite, or other frontend build system.
-- No ASP.NET Core Identity, JWT, OAuth, or database-backed user system.
-- No packaging, signing, installer, CI, or release automation changes.
-
-## Feature Spec
+- No Internet relay, NAT traversal, Bluetooth discovery, cloud account, device approval workflow, expiring pairing code, TLS certificate automation, or end-to-end encryption.
+- No WebSocket chat, typing indicators, read receipts, rich text, message editing, or message attachments beyond the existing file upload flow.
+- No macOS/Linux tray integration and no platform-specific UI framework migration.
+- No fake browser chrome from the product preview.
 
 ## Problem
 
-Users need a small cross-platform tool that can receive files from phones, tablets, and computers on the same local network through a browser. The current repository needed a clear `LanTransfer` structure, stable project boundaries, a safe storage core, HTTP APIs, a simple static UI, and basic tests.
+The current application makes users manually discover and type the LAN URL, transfers only files, leaves unused vertical space on large displays, and behaves like a developer console program when launched. A normal user needs a discoverable connection flow, short text transfer, a viewport-filling UI, and desktop-friendly startup behavior.
 
-## User Scenario
+## User scenarios
 
-As a user on a trusted LAN, I want to run `lantransfer` on one device and open a web page from another device, so that I can upload and download files without installing a client app.
+- As a desktop user, I can display a QR code for a reachable LAN URL so that a phone on the same LAN can scan and open LanTransfer.
+- As either device, I can send a short plain-text note and see it in the same timeline as files.
+- As a large-screen user, the transfer surface fills the available viewport height while retaining a readable maximum content width.
+- As an ordinary user, launching the packaged program opens the site in my default browser without showing a Windows console; I can reopen or exit it from the Windows tray.
 
-## Goals
+## Functional requirements
 
-- Initialize a clean `LanTransfer` solution with `LanTransfer.Core`, `LanTransfer.Host`, and `LanTransfer.Tests`.
-- Keep Core free of ASP.NET Core and UI concerns.
-- Provide a cross-platform console Host that starts Kestrel and serves APIs plus static files.
-- Provide a chat-style file transfer UI using only HTML, CSS, and JavaScript.
-- Add English and Simplified Chinese web UI localization.
-- Add tests for filename safety, path traversal protection, listing, size limits, missing files, duplicate names, and Core dependency boundaries.
-
-## Functional Requirements
-
-| ID | Requirement | Rationale | Acceptance Criteria |
+| ID | Requirement | Rationale | Acceptance criteria |
 |---|---|---|---|
-| FR-1 | Solution and projects are named `LanTransfer`, `LanTransfer.Core`, `LanTransfer.Host`, and `LanTransfer.Tests`. | Keeps repository identity consistent. | AC-1 |
-| FR-2 | Host is a cross-platform console executable named `lantransfer`. | Users should run a CLI-style receiver. | AC-2 |
-| FR-3 | Core implements storage, file listing, download metadata, filename safety, size limits, duplicate naming, and stable error codes. | Business logic should be reusable and testable. | AC-3 |
-| FR-4 | Core does not reference ASP.NET Core or UI/i18n concepts. | Preserves layer boundaries. | AC-4 |
-| FR-5 | Host exposes health, upload, list, and download Minimal APIs with optional AccessToken validation. | Provides the required web contract. | AC-5 |
-| FR-6 | Uploads are streamed, size-limited, saved through temporary `.uploading` files, and do not overwrite existing files. | Prevents memory pressure and partial file pollution. | AC-6 |
-| FR-7 | Static UI is a responsive chat-style file transfer surface. | Matches the product direction and screenshot. | AC-7 |
-| FR-8 | Web UI supports `en` and `zh-CN` through JSON files and one `index.html`. | Keeps i18n lightweight and frontend-only. | AC-8 |
-| FR-9 | README files document usage, configuration, APIs, build, roadmap, and license. | Makes the repository usable as an OSS project. | AC-9 |
-| FR-10 | Build and tests pass on .NET 10. | Confirms the initialized project is healthy. | AC-10 |
+| FR-11 | The more menu exposes **Connect new device** and opens an accessible modal containing a scannable QR code and the encoded LAN URL. | Removes manual address entry. | AC-11, AC-12 |
+| FR-12 | The Host enumerates usable IPv4 LAN URLs; the modal allows switching when more than one address exists. Configured access tokens are included in the URL. | Handles Wi-Fi/Ethernet/VPN ambiguity and protected deployments. | AC-13 |
+| FR-13 | Users can copy the selected connection URL. QR generation is local and does not call an Internet service. | Keeps LAN/offline behavior and privacy. | AC-14 |
+| FR-14 | The composer accepts plain text with the hint **Enter a note or send a file** / **输入备注或发送文件**. Enter sends, Shift+Enter inserts a newline, and empty/whitespace-only text is rejected. | Adds the requested lightweight note transfer. | AC-15 |
+| FR-15 | Text messages are limited to 4,000 characters, stored locally, returned by authenticated APIs, and rendered safely as plain text in chronological order with files. | Prevents abuse and makes messages visible after reload/on another device. | AC-16, AC-17 |
+| FR-16 | On desktop/tablet widths the outer surface uses the full viewport height with a centered, width-limited content column; on phones it remains a full-screen layout. | Uses large displays without stretching message content excessively. | AC-18 |
+| FR-17 | After the server starts, it opens its localhost URL once in the default browser. This can be disabled by configuration. | Provides consumer-friendly startup. | AC-19 |
+| FR-18 | Windows builds use a windowed executable, add a native tray icon with Open and Exit actions, and keep the server alive when the browser closes. macOS/Linux builds remain normal console hosts and do not load Windows APIs. | Hides developer-facing console while preserving cross-platform publication. | AC-20, AC-21 |
+| FR-19 | Existing upload, download, localization, token authorization, storage safety, and release targets continue to work. | Prevents regressions. | AC-22 |
 
-## UX Behavior
+## UX behavior
 
-- Desktop UI appears as a centered white transfer window with a subtle browser/app bar.
-- Mobile UI fills the viewport like a chat page.
-- Existing downloadable files appear as left-side file bubbles.
-- Newly uploaded files appear as right-side sending/sent bubbles.
-- Dragging files over the page gives a subtle highlight.
-- Upload failures render inline/toast feedback using localized error messages.
-- Empty state is text-only and understated.
+- The connection dialog opens from the first menu action, traps focus through the native `dialog` element, closes via its close button or Escape, shows one QR at a time, and displays a network/help note.
+- QR images are SVG for crisp display. The QR content and visible URL always match.
+- The composer is a multiline text area. The add button still opens the file picker; the send button sends text when present and otherwise opens the file picker.
+- Text uses `textContent`/plain JSON data only; HTML entered by a user is never interpreted.
+- Timeline content is periodically refreshed so a second device sees new files and text without a full page reload. Locally sent item IDs are remembered for direction styling.
+- Desktop layout has no fixed 760 px height cap. Header and composer remain fixed rows while only the timeline scrolls.
+- Loading, empty, invalid-text, network-error, unauthorized, and copy-failure states use localized feedback.
 
-## Technical Constraints
+## Technical constraints
 
-- Target repository: this repository root.
 - Target framework: `net10.0`.
-- Host SDK shape: `Microsoft.NET.Sdk` console executable with `Microsoft.AspNetCore.App` framework reference.
-- Core dependency rule: no `Microsoft.AspNetCore.*`, no `HttpContext`, no `IFormFile`, no `IResult`, no `Results`, no Controllers, no Minimal API handlers.
-- Frontend: static files only under `src/LanTransfer.Host/wwwroot`.
-- Engineering guidelines: apply `templates/dotnet-engineering-guidelines.md` from the `spec-driven-delivery` skill.
+- Preserve `LanTransfer.Core`, `LanTransfer.Host`, `LanTransfer.Tests`; do not add a desktop project or frontend build tool.
+- Text persistence lives under a hidden state subdirectory of the configured storage root so it does not appear in the file list.
+- Use `QRCoder` 1.8.0 for standards-compliant, local SVG QR generation. It is MIT licensed, has no non-framework runtime dependencies, and supports .NET 10.
+- Windows tray support uses runtime-gated Win32 interop in the Host. No Windows-only assembly may be loaded on macOS/Linux.
+- Apply `templates/dotnet-engineering-guidelines.md` from the `spec-driven-delivery` skill.
 
-## Edge Cases
+## Edge cases
 
-- `../evil.txt`, `..\evil.txt`, URL-encoded traversal, and absolute paths are rejected.
-- Empty, whitespace-only, or dot-only names are rejected for lookup and normalized safely for upload when appropriate.
-- Invalid filename characters are replaced for upload filenames.
-- Duplicate files become `name (1).ext`, `name (2).ext`, and so on.
-- Files larger than `MaxFileSizeBytes` return `file_too_large`.
-- Missing downloads return `file_not_found`.
-- Unauthorized protected APIs return `unauthorized`.
+- No usable LAN IPv4 address: show localhost as a diagnostic fallback and explain that another device cannot use it.
+- Multiple adapters: list distinct addresses and let the user choose; do not silently claim which is reachable.
+- Access token: URL query is encoded; API authorization remains unchanged.
+- Text consisting only of whitespace is rejected; leading/trailing whitespace is trimmed; line breaks within the message are preserved.
+- Concurrent message writes are serialized and persisted atomically; a missing message file produces an empty list.
+- Browser launch failure or missing desktop environment is logged but does not stop the server.
+- Windows tray creation failure is logged and does not stop the Host.
 
-## Acceptance Criteria
+## Acceptance criteria
 
-| ID | Criteria | Verification |
+| ID | Observable result | Verification |
 |---|---|---|
-| AC-1 | Solution contains only `LanTransfer.Core`, `LanTransfer.Host`, and `LanTransfer.Tests` as active projects. | Inspect `LanTransfer.sln`. |
-| AC-2 | `LanTransfer.Host` is an executable project with `AssemblyName` `lantransfer`. | Inspect `src/LanTransfer.Host/LanTransfer.Host.csproj`; run `dotnet run --project src/LanTransfer.Host`. |
-| AC-3 | Core storage handles save, list, get, read, duplicate names, and stable error codes. | Unit tests in `LocalFileStorageTests`. |
-| AC-4 | Core project file has no ASP.NET Core framework/package reference. | Unit test plus project inspection. |
-| AC-5 | API endpoints exist at `/api/health`, `/api/files/upload`, `/api/files`, and `/api/files/{fileName}`. | Manual HTTP checks or browser use. |
-| AC-6 | Uploads are streamed to a temp file, enforce max size, and clean temp files on failure. | Code review plus unit tests for size failures. |
-| AC-7 | UI renders a chat-style file transfer timeline on desktop and mobile. | Manual browser check. |
-| AC-8 | Language is selected by URL, localStorage, browser language, then `en`; HTML `lang` updates. | Manual browser check with `?lang=zh-CN`. |
-| AC-9 | English and Chinese README files include required sections. | Inspect `README.md` and `README.zh-CN.md`. |
-| AC-10 | `dotnet build LanTransfer.sln` and `dotnet test LanTransfer.sln` pass. | Run commands. |
+| AC-11 | Connect new device opens a modal from the more menu on desktop and phone widths. | Browser UI check. |
+| AC-12 | A phone can scan the QR and open the exact displayed URL. | Scan test on a same-LAN phone or decode the SVG in a QR test tool. |
+| AC-13 | `/api/connect` returns distinct LAN URLs and includes an encoded token when configured. | Automated/API tests and manual multi-adapter check. |
+| AC-14 | Copy link copies the selected URL; QR is served locally as SVG. | Browser clipboard check and network inspection. |
+| AC-15 | Placeholder text matches the requested copy; Enter sends and Shift+Enter adds a newline. | Desktop/mobile keyboard check. |
+| AC-16 | Empty and >4,000-character messages return stable validation errors; HTML-like input renders literally. | Unit/API/UI checks. |
+| AC-17 | A sent message remains after reload and appears on another browser during polling. | Two-browser manual check. |
+| AC-18 | At 1920x1080 and taller viewports the surface fills the viewport vertically, while message content remains width-limited; 390x844 remains usable. | Screenshot/layout check. |
+| AC-19 | Starting the Host opens one default-browser tab; `OpenBrowserOnStart=false` disables it. | Launch twice with both settings. |
+| AC-20 | Windows publish has no console window and exposes tray Open/Exit actions. | Run the `win-x64` publish artifact. |
+| AC-21 | Linux/macOS publish remains an executable console Host and never enters Win32 tray code. | Publish matrix/build inspection; smoke test where available. |
+| AC-22 | `dotnet build LanTransfer.sln` and `dotnet test LanTransfer.sln` pass; upload/download still work. | Automated build/test plus smoke test. |
 
-## Risks and Review Notes
+## Risks and review notes
 
-- Browser UI has not been automated with Playwright yet; perform manual desktop/mobile visual review.
-- AccessToken is intentionally lightweight and not suitable for public internet exposure.
-- Static image thumbnails load through download URLs; very large images may cost bandwidth in the browser timeline.
+- A QR URL proves reachability only if firewall and Wi-Fi client isolation allow the port; the modal must state this rather than representing the QR as a pairing guarantee.
+- Multi-adapter enumeration cannot know which subnet the phone uses, so address selection is explicit.
+- Hiding the Windows console removes an easy diagnostic surface; startup failures must still be observable through process exit/logging, with future file logging left out of this slice.
+- The QRCoder package is the only new dependency and is confined to the Host.

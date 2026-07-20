@@ -20,6 +20,26 @@
     "success": "文件已发送。",
     "failed": "发送失败"
   },
+  "menu": {
+    "more": "更多选项"
+  },
+  "composer": {
+    "placeholder": "输入备注或发送文件",
+    "send": "发送"
+  },
+  "connect": {
+    "action": "连接新设备",
+    "title": "连接新设备",
+    "description": "用同一局域网内的手机扫描二维码，即可打开此页面。",
+    "loading": "正在查找局域网地址…",
+    "address": "连接地址",
+    "copy": "复制链接",
+    "copied": "连接链接已复制。",
+    "help": "两台设备必须连接到同一局域网。如果一个地址打不开，请尝试其他地址。",
+    "localhostWarning": "未找到局域网地址；localhost 只能在当前电脑上使用。",
+    "qrAlt": "包含所选 LanTransfer 地址的二维码",
+    "close": "关闭"
+  },
   "files": {
     "title": "文件",
     "empty": "暂无文件",
@@ -36,6 +56,10 @@
     "invalidFileName": "文件名无效。",
     "unauthorized": "未授权。",
     "uploadFailed": "文件上传失败。",
+    "invalidMessage": "请输入 1 到 4000 个字符。",
+    "messageFailed": "文字消息保存失败。",
+    "noConnectAddress": "没有可用的连接地址。",
+    "copyFailed": "无法复制链接。",
     "networkError": "网络错误。"
   },
   "language": {

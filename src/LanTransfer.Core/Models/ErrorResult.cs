@@ -12,6 +12,10 @@ public sealed record ErrorResult(string ErrorCode, string Message)
 
     public static ErrorResult UploadFailed() => new(ErrorCodes.UploadFailed, "File upload failed.");
 
+    public static ErrorResult InvalidMessage() => new(ErrorCodes.InvalidMessage, "Message is empty or too long.");
+
+    public static ErrorResult MessageFailed() => new(ErrorCodes.MessageFailed, "Message could not be saved.");
+
     public static ErrorResult NetworkError() => new(ErrorCodes.NetworkError, "Network error.");
 }
 
@@ -22,5 +26,7 @@ public static class ErrorCodes
     public const string InvalidFileName = "invalid_file_name";
     public const string Unauthorized = "unauthorized";
     public const string UploadFailed = "upload_failed";
+    public const string InvalidMessage = "invalid_message";
+    public const string MessageFailed = "message_failed";
     public const string NetworkError = "network_error";
 }

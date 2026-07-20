@@ -14,8 +14,13 @@
     <RepositoryUrl>https://github.com/your-name/LanTransfer</RepositoryUrl>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')) Or ('$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT')">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
     <ProjectReference Include="..\LanTransfer.Core\LanTransfer.Core.csproj" />
   </ItemGroup>
 

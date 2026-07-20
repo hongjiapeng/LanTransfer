@@ -1,10 +1,8 @@
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using LanTransfer.Core.Abstractions;
 using LanTransfer.Core.Models;
 using LanTransfer.Core.Options;
 using LanTransfer.Core.Services;
+using LanTransfer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using QRCoder;
 
 const long MultipartOverheadAllowanceBytes = 16L * 1024 * 1024;
 
@@ -45,6 +44,17 @@ builder.Services.AddSingleton<IFileStorage>(services =>
     return new LocalFileStorage(options);
 });
 builder.Services.AddSingleton<IFileInbox, FileInboxService>();
+builder.Services.AddSingleton<ITextMessageStore>(services =>
+{
+    var options = services.GetRequiredService<IOptions<LanTransferOptions>>().Value;
+    return new LocalTextMessageStore(options);
+});
+builder.Services.AddSingleton(services =>
+{
+    var options = services.GetRequiredService<IOptions<LanTransferOptions>>().Value;
+    return new ConnectionUrlProvider(options);
+});
+builder.Services.AddHostedService<WindowsTrayService>();
 
 var app = builder.Build();
 var contentTypes = new FileExtensionContentTypeProvider();
@@ -58,6 +68,86 @@ app.MapGet("/api/health", () => Results.Ok(new
     name = "LanTransfer",
     deviceName = Environment.MachineName
 }));
+
+app.MapGet("/api/connect", (
+    HttpContext context,
+    ConnectionUrlProvider connectionUrls,
+    IOptions<LanTransferOptions> options) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    return Results.Ok(new
+    {
+        urls = connectionUrls.GetConnectionUrls(),
+        localUrl = connectionUrls.LocalUrl
+    });
+});
+
+app.MapGet("/api/connect/qr", (
+    string url,
+    HttpContext context,
+    ConnectionUrlProvider connectionUrls,
+    IOptions<LanTransferOptions> options) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    var allowedUrls = connectionUrls.GetConnectionUrls().Select(item => item.Url).ToHashSet(StringComparer.Ordinal);
+    if (!allowedUrls.Contains(url))
+    {
+        return Results.BadRequest(new ErrorResult("invalid_connect_url", "Connection URL is invalid."));
+    }
+
+    using var qrData = QRCodeGenerator.GenerateQrCode(url, QRCodeGenerator.ECCLevel.M);
+    using var qrCode = new SvgQRCode(qrData);
+    var svg = qrCode.GetGraphic(8, "#171717", "#ffffff", drawQuietZones: true, sizingMode: SvgQRCode.SizingMode.ViewBoxAttribute);
+    return Results.Text(svg, "image/svg+xml; charset=utf-8");
+});
+
+app.MapGet("/api/messages", async (
+    HttpContext context,
+    ITextMessageStore messages,
+    IOptions<LanTransferOptions> options,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    return Results.Ok(await messages.ListAsync(cancellationToken));
+});
+
+app.MapPost("/api/messages", async (
+    TextMessageRequest request,
+    HttpContext context,
+    ITextMessageStore messages,
+    IOptions<LanTransferOptions> options,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    try
+    {
+        return Results.Ok(await messages.AddAsync(request.Text, cancellationToken));
+    }
+    catch (MessageValidationException)
+    {
+        return Results.BadRequest(ErrorResult.InvalidMessage());
+    }
+    catch
+    {
+        return Results.Json(ErrorResult.MessageFailed(), statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
 
 app.MapPost("/api/files/upload", async (
     HttpContext context,
@@ -168,10 +258,19 @@ app.MapGet("/api/files/{*fileName}", async (
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("LanTransfer");
-    var port = app.Services.GetRequiredService<IOptions<LanTransferOptions>>().Value.Port;
+    var options = app.Services.GetRequiredService<IOptions<LanTransferOptions>>().Value;
+    var connectionUrls = app.Services.GetRequiredService<ConnectionUrlProvider>();
     logger.LogInformation("LanTransfer is running.");
-    logger.LogInformation("Local URL: http://localhost:{Port}", port);
-    logger.LogInformation("LAN URL: http://{Address}:{Port}", GetLocalIPv4Address(), port);
+    logger.LogInformation("Local URL: {LocalUrl}", connectionUrls.LocalUrl);
+    foreach (var connectionUrl in connectionUrls.GetConnectionUrls())
+    {
+        logger.LogInformation("LAN URL: {LanUrl}", connectionUrl.Url);
+    }
+
+    if (options.OpenBrowserOnStart)
+    {
+        BrowserLauncher.TryOpen(connectionUrls.LocalUrl, logger);
+    }
 });
 
 app.Run();
@@ -190,47 +289,17 @@ static bool IsAuthorized(HttpContext context, LanTransferOptions options)
         string.Equals(queryToken, options.AccessToken, StringComparison.Ordinal);
 }
 
-static string GetLocalIPv4Address()
-{
-    try
-    {
-        foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            if (networkInterface.OperationalStatus != OperationalStatus.Up ||
-                networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-            {
-                continue;
-            }
-
-            var address = networkInterface
-                .GetIPProperties()
-                .UnicastAddresses
-                .FirstOrDefault(item => item.Address.AddressFamily == AddressFamily.InterNetwork &&
-                    !IPAddress.IsLoopback(item.Address))
-                ?.Address;
-
-            if (address is not null)
-            {
-                return address.ToString();
-            }
-        }
-    }
-    catch
-    {
-        return "127.0.0.1";
-    }
-
-    return "127.0.0.1";
-}
-
 static LanTransferOptions LoadOptions(IConfiguration configuration)
 {
     var section = configuration.GetSection("LanTransfer");
     return new LanTransferOptions
     {
         Port = ReadInt(section, "Port", 8765),
-        StorageDirectory = section["StorageDirectory"] ?? "uploads",
+        StorageDirectory = ResolveStorageDirectory(section["StorageDirectory"] ?? "uploads"),
         MaxFileSizeBytes = ReadLong(section, "MaxFileSizeBytes", 1024L * 1024 * 1024),
+        MaxMessageLength = ReadInt(section, "MaxMessageLength", 4000),
+        OpenBrowserOnStart = ReadBool(section, "OpenBrowserOnStart", true),
+        EnableWindowsTray = ReadBool(section, "EnableWindowsTray", true),
         AccessToken = section["AccessToken"]
     };
 }
@@ -245,6 +314,18 @@ static long ReadLong(IConfiguration configuration, string key, long defaultValue
     return long.TryParse(configuration[key], out var value) ? value : defaultValue;
 }
 
+static bool ReadBool(IConfiguration configuration, string key, bool defaultValue)
+{
+    return bool.TryParse(configuration[key], out var value) ? value : defaultValue;
+}
+
+static string ResolveStorageDirectory(string configuredPath)
+{
+    return Path.IsPathFullyQualified(configuredPath)
+        ? configuredPath
+        : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, configuredPath));
+}
+
 static string ResolveWebRootPath()
 {
     var candidates = new[]
@@ -256,3 +337,5 @@ static string ResolveWebRootPath()
 
     return candidates.FirstOrDefault(Directory.Exists) ?? candidates[0];
 }
+
+public sealed record TextMessageRequest(string Text);
