@@ -295,7 +295,7 @@ static LanTransferOptions LoadOptions(IConfiguration configuration)
     return new LanTransferOptions
     {
         Port = ReadInt(section, "Port", 8765),
-        StorageDirectory = ResolveStorageDirectory(section["StorageDirectory"] ?? "uploads"),
+        StorageDirectory = StoragePathResolver.Resolve(section["StorageDirectory"], AppContext.BaseDirectory),
         MaxFileSizeBytes = ReadLong(section, "MaxFileSizeBytes", 1024L * 1024 * 1024),
         MaxMessageLength = ReadInt(section, "MaxMessageLength", 4000),
         OpenBrowserOnStart = ReadBool(section, "OpenBrowserOnStart", true),
@@ -317,13 +317,6 @@ static long ReadLong(IConfiguration configuration, string key, long defaultValue
 static bool ReadBool(IConfiguration configuration, string key, bool defaultValue)
 {
     return bool.TryParse(configuration[key], out var value) ? value : defaultValue;
-}
-
-static string ResolveStorageDirectory(string configuredPath)
-{
-    return Path.IsPathFullyQualified(configuredPath)
-        ? configuredPath
-        : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, configuredPath));
 }
 
 static string ResolveWebRootPath()

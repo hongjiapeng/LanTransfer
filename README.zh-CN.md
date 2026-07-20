@@ -64,7 +64,7 @@ LanTransfer 从 `src/LanTransfer.Host/appsettings.json` 的 `LanTransfer` 节读
 {
   "LanTransfer": {
     "Port": 8765,
-    "StorageDirectory": "uploads",
+    "StorageDirectory": null,
     "MaxFileSizeBytes": 1073741824,
     "MaxMessageLength": 4000,
     "OpenBrowserOnStart": true,
@@ -75,6 +75,8 @@ LanTransfer 从 `src/LanTransfer.Host/appsettings.json` 的 `LanTransfer` 节读
 ```
 
 如果配置了 `AccessToken`，受保护接口需要通过 `X-LanTransfer-Token` 请求头或 `?token=...` query 参数传递令牌。
+
+当 `StorageDirectory` 为 `null` 时，LanTransfer 会把接收文件保存到当前用户的本地应用数据目录（Windows 为 `%LOCALAPPDATA%\LanTransfer\uploads`）。可以配置绝对路径或相对于程序目录的路径覆盖默认值。默认目录与程序文件分离，因此通过包管理器升级或卸载时不会删除用户文件。
 
 也可以通过环境变量覆盖配置。环境变量使用 `LanTransfer__` 前缀，例如：
 

@@ -44,6 +44,7 @@
 - [x] Windows and Linux publish compile checks pass.
 - [x] Root URL and all static assets work from built/published output.
 - [x] No unrelated files, generated build output, or uploaded user data are tracked.
+- [ ] Default user data remains outside the WinGet-managed package directory across install, upgrade, and uninstall.
 
 ## Manual flow
 

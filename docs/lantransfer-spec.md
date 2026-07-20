@@ -55,6 +55,7 @@ The current application makes users manually discover and type the LAN URL, tran
 - Target framework: `net10.0`.
 - Preserve `LanTransfer.Core`, `LanTransfer.Host`, `LanTransfer.Tests`; do not add a desktop project or frontend build tool.
 - Text persistence lives under a hidden state subdirectory of the configured storage root so it does not appear in the file list.
+- With no explicit storage configuration, user data lives under the current user's local application-data directory rather than the executable/package directory, so package upgrades and uninstall do not remove received files.
 - Use `QRCoder` 1.8.0 for standards-compliant, local SVG QR generation. It is MIT licensed, has no non-framework runtime dependencies, and supports .NET 10.
 - Windows tray support uses runtime-gated Win32 interop in the Host. No Windows-only assembly may be loaded on macOS/Linux.
 - The tray artwork is drawn deterministically in memory as a transparent blue rounded tile with a white monitor glyph, with the Windows application icon as a non-fatal fallback.

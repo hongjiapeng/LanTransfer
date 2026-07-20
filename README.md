@@ -60,7 +60,7 @@ LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettin
 {
   "LanTransfer": {
     "Port": 8765,
-    "StorageDirectory": "uploads",
+    "StorageDirectory": null,
     "MaxFileSizeBytes": 1073741824,
     "MaxMessageLength": 4000,
     "OpenBrowserOnStart": true,
@@ -71,6 +71,8 @@ LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettin
 ```
 
 If `AccessToken` is configured, protected API calls must include `X-LanTransfer-Token` or `?token=...`.
+
+When `StorageDirectory` is `null`, LanTransfer stores received files under the current user's local application-data directory (`%LOCALAPPDATA%\LanTransfer\uploads` on Windows). Set an absolute or app-relative path to override it. Keeping the default outside the executable directory makes package upgrades and uninstall safe for user files.
 
 Environment variables can override configuration values by using the `LanTransfer__` prefix, for example:
 

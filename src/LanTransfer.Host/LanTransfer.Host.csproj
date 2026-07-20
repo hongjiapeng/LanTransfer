@@ -11,7 +11,7 @@
     <Authors>LanTransfer contributors</Authors>
     <Description>A cross-platform LAN file transfer tool powered by .NET and a browser UI.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/your-name/LanTransfer</RepositoryUrl>
+    <RepositoryUrl>https://github.com/hongjiapeng/LanTransfer</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')) Or ('$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT')">
