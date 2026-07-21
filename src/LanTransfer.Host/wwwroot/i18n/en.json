@@ -5,7 +5,9 @@
   },
   "device": {
     "defaultName": "DESKTOP-01",
+    "connecting": "Connecting…",
     "connected": "Connected, ready to transfer files",
+    "disconnected": "Disconnected",
     "ready": "Ready"
   },
   "date": {

@@ -2,12 +2,15 @@ const state = {
     accessToken: '',
     isUploading: false,
     isSendingMessage: false,
+    connectionStatus: 'connecting',
     sentMessageIds: new Set(),
     connectUrls: []
 };
 
 const dom = {
     deviceName: document.getElementById('deviceName'),
+    deviceStatus: document.getElementById('deviceStatus'),
+    deviceStatusText: document.getElementById('deviceStatusText'),
     timeline: document.getElementById('timeline'),
     emptyState: document.getElementById('emptyState'),
     fileInput: document.getElementById('fileInput'),
@@ -59,10 +62,18 @@ async function readError(response) {
 }
 
 async function fetchJson(url, options = {}) {
-    const response = await fetch(withToken(url), {
-        ...options,
-        headers: authHeaders(options.headers || {})
-    });
+    let response;
+    try {
+        response = await fetch(withToken(url), {
+            ...options,
+            headers: authHeaders(options.headers || {})
+        });
+    } catch {
+        setConnectionStatus('disconnected');
+        throw new Error('network_error');
+    }
+
+    setConnectionStatus('connected');
 
     if (!response.ok) {
         throw new Error(await readError(response));
@@ -85,6 +96,7 @@ function uploadFile(file, onProgress) {
         });
 
         xhr.addEventListener('load', () => {
+            setConnectionStatus('connected');
             if (xhr.status < 200 || xhr.status >= 300) {
                 try {
                     const payload = JSON.parse(xhr.responseText);
@@ -98,7 +110,10 @@ function uploadFile(file, onProgress) {
             resolve(JSON.parse(xhr.responseText));
         });
 
-        xhr.addEventListener('error', () => reject(new Error('network_error')));
+        xhr.addEventListener('error', () => {
+            setConnectionStatus('disconnected');
+            reject(new Error('network_error'));
+        });
         xhr.open('POST', withToken('/api/files/upload'));
         if (state.accessToken) {
             xhr.setRequestHeader('X-LanTransfer-Token', state.accessToken);
@@ -250,11 +265,16 @@ function createFileIcon(fileName) {
 }
 
 async function refreshHealth() {
+    if (!navigator.onLine) {
+        setConnectionStatus('disconnected');
+        return;
+    }
+
     try {
         const health = await fetchJson('/api/health');
         dom.deviceName.textContent = health.deviceName || t('device.defaultName');
     } catch {
-        dom.deviceName.textContent = t('device.defaultName');
+        setConnectionStatus('disconnected');
     }
 }
 
@@ -458,10 +478,23 @@ function setupEvents() {
     dom.connectButton.addEventListener('click', openConnectDialog);
     dom.connectUrlSelect.addEventListener('change', updateConnectUrl);
     dom.copyConnectUrl.addEventListener('click', copyConnectUrl);
+
+    window.addEventListener('offline', () => setConnectionStatus('disconnected'));
+    window.addEventListener('online', () => {
+        setConnectionStatus('connecting');
+        refreshHealth();
+    });
+}
+
+function setConnectionStatus(status) {
+    state.connectionStatus = status;
+    dom.deviceStatus.dataset.connectionStatus = status;
+    dom.deviceStatusText.textContent = t(`device.${status}`);
 }
 
 function renderStaticState() {
     document.title = t('app.title');
+    setConnectionStatus(state.connectionStatus);
     dom.messageInput.setAttribute('aria-label', t('composer.placeholder'));
     if (!dom.deviceName.textContent || dom.deviceName.textContent === 'DESKTOP-01') {
         dom.deviceName.textContent = t('device.defaultName');
@@ -546,7 +579,10 @@ async function init() {
     setupEvents();
     await refreshHealth();
     await refreshTimeline();
-    window.setInterval(() => refreshTimeline({ preserveScroll: true }), 3000);
+    window.setInterval(() => {
+        refreshHealth();
+        refreshTimeline({ preserveScroll: true });
+    }, 3000);
 }
 
 init();

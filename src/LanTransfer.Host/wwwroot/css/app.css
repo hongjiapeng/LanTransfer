@@ -160,7 +160,15 @@ button {
     width: 8px;
     height: 8px;
     border-radius: 999px;
+    background: #d39a24;
+}
+
+.device-status[data-connection-status="connected"] .status-dot {
     background: var(--accent);
+}
+
+.device-status[data-connection-status="disconnected"] .status-dot {
+    background: var(--danger);
 }
 
 .more-menu {

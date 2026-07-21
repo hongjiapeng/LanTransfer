@@ -16,7 +16,10 @@
                 </div>
                 <div class="device-copy">
                     <h1 id="deviceName" data-i18n="device.defaultName">DESKTOP-01</h1>
-                    <p><span class="status-dot"></span><span data-i18n="device.connected">Connected, ready to transfer files</span></p>
+                    <p id="deviceStatus" class="device-status" data-connection-status="connecting" role="status" aria-live="polite">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span id="deviceStatusText" data-i18n="device.connecting">Connecting…</span>
+                    </p>
                 </div>
                 <details class="more-menu">
                     <summary data-i18n-title="menu.more" title="More options" aria-label="More options"><span aria-hidden="true">⋯</span></summary>

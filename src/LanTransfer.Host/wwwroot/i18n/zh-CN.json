@@ -5,7 +5,9 @@
   },
   "device": {
     "defaultName": "DESKTOP-01",
+    "connecting": "正在连接…",
     "connected": "已连接，可以传输文件",
+    "disconnected": "连接已断开",
     "ready": "就绪"
   },
   "date": {
