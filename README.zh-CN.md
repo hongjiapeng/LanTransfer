@@ -139,6 +139,16 @@ Windows：
 .\scripts\release.ps1 0.1.0 -DryRun
 ```
 
+Windows Release 同时会生成 `LanTransfer-版本号-win-x64-Setup.exe` 安装程序。安装程序支持 English、简体中文和繁体中文，会根据系统语言自动选择，也可以在安装开始时手动切换语言。安装程序默认创建开始菜单快捷方式，并提供创建桌面快捷方式和登录 Windows 后自动启动的选项。应用使用自包含 .NET 发布，不需要另外安装 .NET Runtime。
+
+安装程序使用当前用户目录，默认安装到 `%LOCALAPPDATA%\Programs\LanTransfer`，不需要管理员权限。接收文件默认保存在 `%LOCALAPPDATA%\LanTransfer\uploads`，卸载应用不会删除这些用户文件。
+
+本地生成 Windows 安装包需要先安装 Inno Setup 6，然后运行：
+
+```powershell
+.\scripts\build-installer.ps1 -Version 1.0.0
+```
+
 ## 项目结构
 
 ```text

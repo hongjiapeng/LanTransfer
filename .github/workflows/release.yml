@@ -94,10 +94,84 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  windows-installer:
+    name: Windows installer
+    runs-on: windows-latest
+    needs: test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish Windows application
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          if ($version.StartsWith("v")) {
+            $version = $version.Substring(1)
+          }
+
+          dotnet publish src/LanTransfer.Host/LanTransfer.Host.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            -p:Version=$version `
+            -p:PublishSingleFile=true `
+            -p:DebugType=none `
+            -p:DebugSymbols=false `
+            --output "artifacts/win-x64"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress --yes
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          if ($version.StartsWith("v")) {
+            $version = $version.Substring(1)
+          }
+
+          $isccCommand = Get-Command iscc.exe -ErrorAction SilentlyContinue
+          $iscc = if ($null -eq $isccCommand) { $null } else { $isccCommand.Path }
+          if ([string]::IsNullOrWhiteSpace($iscc)) {
+            $iscc = @(
+              (Join-Path ${env:ProgramFiles} "Inno Setup 6\ISCC.exe"),
+              (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"),
+              (Join-Path ${env:LOCALAPPDATA} "Programs\Inno Setup 6\ISCC.exe")
+            ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          }
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup compiler was not found."
+          }
+
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & $iscc `
+            "/DAppVersion=$version" `
+            "/DSourceDir=$pwd\artifacts\win-x64" `
+            "/DOutputDir=$pwd\dist" `
+            "$pwd\installer\LanTransfer.iss"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup compilation failed with exit code $LASTEXITCODE."
+          }
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: lantransfer-${{ github.ref_name }}-win-x64-installer
+          path: dist/*-Setup.exe
+          if-no-files-found: error
+
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: package
+    needs: [package, windows-installer]
 
     steps:
       - name: Download release assets

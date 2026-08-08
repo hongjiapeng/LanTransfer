@@ -135,6 +135,16 @@ To preview the checks without creating a tag, run:
 .\scripts\release.ps1 0.1.0 -DryRun
 ```
 
+Windows releases also include `LanTransfer-version-win-x64-Setup.exe`. The installer supports English, Simplified Chinese, and Traditional Chinese. It selects a language based on the system language by default and allows manual selection at the beginning of setup. It creates a Start Menu shortcut by default and offers optional desktop-shortcut and start-on-sign-in tasks. The application is published self-contained, so users do not need to install the .NET Runtime separately.
+
+The installer uses a per-user install location, `%LOCALAPPDATA%\Programs\LanTransfer`, and does not require administrator privileges. Received files remain under `%LOCALAPPDATA%\LanTransfer\uploads` and are not removed when the application is uninstalled.
+
+To build the Windows installer locally, install Inno Setup 6 and run:
+
+```powershell
+.\scripts\build-installer.ps1 -Version 1.0.0
+```
+
 ## Project Structure
 
 ```text
