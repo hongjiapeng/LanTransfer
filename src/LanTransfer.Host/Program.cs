@@ -25,6 +25,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 var startupOptions = LoadOptions(builder.Configuration);
+var requestedPort = startupOptions.Port;
+startupOptions.Port = PortResolver.Resolve(requestedPort);
 
 builder.WebHost.UseUrls($"http://0.0.0.0:{startupOptions.Port}");
 builder.WebHost.ConfigureKestrel(options =>
@@ -268,6 +270,14 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("LanTransfer");
     var options = app.Services.GetRequiredService<IOptions<LanTransferOptions>>().Value;
     var connectionUrls = app.Services.GetRequiredService<ConnectionUrlProvider>();
+    if (options.Port != requestedPort)
+    {
+        logger.LogWarning(
+            "Configured port {RequestedPort} is unavailable. Using available port {ActualPort} instead.",
+            requestedPort,
+            options.Port);
+    }
+
     logger.LogInformation("LanTransfer is running.");
     logger.LogInformation("Local URL: {LocalUrl}", connectionUrls.LocalUrl);
     foreach (var connectionUrl in connectionUrls.GetConnectionUrls())
