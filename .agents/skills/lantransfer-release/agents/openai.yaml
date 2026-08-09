@@ -1,4 +1,4 @@
 interface:
   display_name: "LanTransfer Release"
-  short_description: "Publish LanTransfer releases safely"
-  default_prompt: "Use $lantransfer-release to publish a new LanTransfer version."
+  short_description: "Publish LanTransfer and WinGet releases"
+  default_prompt: "Use $lantransfer-release to publish a LanTransfer GitHub Release and, when requested, its WinGet update."

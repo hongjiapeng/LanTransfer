@@ -1,13 +1,15 @@
 ---
 name: lantransfer-release
-description: Publish LanTransfer versions through the repository release script. Use when Codex needs to recommend a release version, preview a release, create and push a v*.*.* tag, trigger GitHub Actions Releases, or explain/fix the LanTransfer release workflow that uses scripts/release.ps1.
+description: Publish LanTransfer GitHub Releases and WinGet package updates. Use when Codex needs to recommend a release version, preview a release, create and push a v*.*.* tag, trigger GitHub Actions assets, submit or update the JiaPeng.LanTransfer WinGet manifest, or explain/fix the LanTransfer release workflow.
 ---
 
 # LanTransfer Release
 
 ## Overview
 
-Use this skill to release LanTransfer from the repository root by calling `scripts/release.ps1`. The script is the source of truth for local release automation; do not reimplement tag creation, test execution, or pushing by hand unless the script is missing or broken.
+Use this skill to release LanTransfer from the repository root by calling `scripts/release.ps1`. The script is the source of truth for local GitHub Release automation; do not reimplement tag creation, test execution, or pushing by hand unless the script is missing or broken.
+
+For WinGet submission or updates, read [references/winget-publish.md](references/winget-publish.md) and follow it after the GitHub Release assets are available.
 
 ## Version Choice
 
@@ -17,7 +19,7 @@ Use this skill to release LanTransfer from the repository root by calling `scrip
 - Use `v0.1.1` for bug-fix-only follow-ups, `v0.2.0` for meaningful feature additions before stability, and `v1.0.0` only when the project is ready to be presented as stable.
 - Avoid four-part tags such as `v0.1.0.0` for GitHub Releases. Four-part versions are appropriate for Windows/.NET file versions, not release tags.
 
-## Workflow
+## GitHub Release Workflow
 
 1. Confirm the repository context:
    - Run `git remote -v` if the target GitHub repository matters.
@@ -39,6 +41,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\release.ps1 0.1.0
 
 4. After the tag push succeeds, GitHub Actions creates the release assets from `.github/workflows/release.yml`. If the user asks to verify the remote release, inspect the GitHub Actions run or GitHub Releases page with the available GitHub/CLI tools.
 
+5. If the user also requests WinGet, continue with [references/winget-publish.md](references/winget-publish.md) only after the exact versioned Windows asset exists and its SHA256 can be verified.
+
 ## Guardrails
 
 - Do not pass `-AllowDirty` for a real release unless the user explicitly requests it and understands the risk.
@@ -46,3 +50,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\release.ps1 0.1.0
 - Do not manually create lightweight tags for normal releases; use the script so annotated tags are created consistently.
 - If `scripts/release.ps1` is missing, stop and explain that the skill depends on that script instead of inventing a parallel process.
 - If the local remote points at `PhoneControlKit` but the user expects `LanTransfer`, call out the repository mismatch before releasing.
+- Keep the LanTransfer WinGet package identifier stable; do not create a second identifier for a version update.
+- Never sign the Microsoft CLA or make ownership declarations for the user; stop and ask the user to complete those human gates personally.
