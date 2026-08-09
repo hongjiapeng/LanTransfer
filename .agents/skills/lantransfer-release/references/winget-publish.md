@@ -31,7 +31,7 @@ Do not hard-code a future hash. Recalculate it from the final asset every releas
 
 ## Manifest shape
 
-Generate four files with the `winget-package-publisher` skill's `New-WinGetManifest.ps1` generator:
+Generate four files with the bundled `scripts/New-LanTransferWinGetManifest.ps1` script. This keeps the LanTransfer workflow self-contained; do not require the separate `winget-package-publisher` skill to be installed.
 
 ```text
 JiaPeng.LanTransfer.yaml
@@ -79,13 +79,15 @@ git -C $wingetRoot switch -c codex/winget-jiaPeng-lantransfer-<version> origin/m
 git -C $wingetRoot sparse-checkout set --no-cone 'manifests/j/JiaPeng/LanTransfer'
 ```
 
-Create a temporary JSON configuration with the fields from `references/configuration.md` in the `winget-package-publisher` skill. Supply the already verified installer hash and run the generator in offline mode:
+Supply the already verified installer hash and run the bundled generator in offline mode:
 
 ```powershell
 $output = Join-Path $wingetRoot 'manifests\j\JiaPeng\LanTransfer\<version>'
-& '<winget-package-publisher-skill>\scripts\New-WinGetManifest.ps1' `
-  -ConfigPath '<temporary-config.json>' `
+& '<lantransfer-release-skill>\scripts\New-LanTransferWinGetManifest.ps1' `
+  -Version '<version>' `
   -OutputDirectory $output `
+  -ReleaseDate '<yyyy-MM-dd>' `
+  -InstallerSha256 '<sha256>' `
   -Offline `
   -Validate
 ```
