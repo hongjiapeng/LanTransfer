@@ -15,6 +15,8 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     private const int WmLButtonUp = 0x0202;
     private const int WmRButtonUp = 0x0205;
     private const int TrayCallbackMessage = WmApp + 1;
+    private const uint ActivateMessage = WmApp + 2;
+    private const string TrayWindowClassName = "LanTransferTrayWindow";
     private const uint NimAdd = 0x00000000;
     private const uint NimDelete = 0x00000002;
     private const uint NifMessage = 0x00000001;
@@ -49,6 +51,27 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         _urls = urls;
         _logger = logger;
         _enabled = options.Value.EnableWindowsTray && OperatingSystem.IsWindows();
+    }
+
+    public static bool TryActivateExistingInstance()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            var window = FindWindow(TrayWindowClassName, null);
+            if (window != IntPtr.Zero && PostMessage(window, ActivateMessage, IntPtr.Zero, IntPtr.Zero))
+            {
+                return true;
+            }
+
+            Thread.Sleep(50);
+        }
+
+        return false;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -103,7 +126,7 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         {
             var instance = GetModuleHandle(null);
             _windowProcedure = HandleWindowMessage;
-            var className = $"LanTransferTrayWindow-{Environment.ProcessId}";
+            var className = TrayWindowClassName;
             var windowClass = new WindowClass
             {
                 WindowProcedure = _windowProcedure,
@@ -166,6 +189,12 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
 
     private IntPtr HandleWindowMessage(IntPtr window, uint message, IntPtr wParam, IntPtr lParam)
     {
+        if (message == ActivateMessage)
+        {
+            BrowserLauncher.TryOpen(_urls.LocalUrl, _logger);
+            return IntPtr.Zero;
+        }
+
         if (message == TrayCallbackMessage)
         {
             switch (unchecked((int)lParam.ToInt64()))
@@ -529,6 +558,9 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DestroyWindow(IntPtr window);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr FindWindow(string? className, string? windowName);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

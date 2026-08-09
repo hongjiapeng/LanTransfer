@@ -25,6 +25,7 @@ if (OperatingSystem.IsWindows())
 
     if (!createdNew)
     {
+        WindowsTrayService.TryActivateExistingInstance();
         singleInstanceMutex.Dispose();
         return;
     }
