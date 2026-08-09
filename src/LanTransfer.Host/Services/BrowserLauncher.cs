@@ -2,6 +2,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
+#if WINDOWS_UI_AUTOMATION
+using UIA = Interop.UIAutomationClient;
+#endif
 
 namespace LanTransfer.Services;
 
@@ -27,6 +30,11 @@ public static class BrowserLauncher
     {
         try
         {
+            if (OperatingSystem.IsWindows() && TryActivateExistingBrowserTab())
+            {
+                return true;
+            }
+
             if (OperatingSystem.IsWindows() && TryActivateExistingBrowserWindow())
             {
                 return true;
@@ -46,19 +54,98 @@ public static class BrowserLauncher
         }
     }
 
+#if WINDOWS_UI_AUTOMATION
+    private static bool TryActivateExistingBrowserTab()
+    {
+        try
+        {
+            UIA.IUIAutomation automation = new UIA.CUIAutomation8();
+            var matchingWindow = IntPtr.Zero;
+
+            EnumWindows((window, _) =>
+            {
+                if (!IsWindowVisible(window) || !IsBrowserProcessWindow(window))
+                {
+                    return true;
+                }
+
+                if (!TrySelectLanTransferTab(automation, window))
+                {
+                    return true;
+                }
+
+                matchingWindow = window;
+                return false;
+            }, IntPtr.Zero);
+
+            return matchingWindow != IntPtr.Zero && TryRestoreAndActivate(matchingWindow);
+        }
+        catch (COMException)
+        {
+            return false;
+        }
+        catch (InvalidCastException)
+        {
+            return false;
+        }
+    }
+
+    private static bool TrySelectLanTransferTab(UIA.IUIAutomation automation, IntPtr window)
+    {
+        try
+        {
+            var browserWindow = automation.ElementFromHandle(window);
+            if (browserWindow is null)
+            {
+                return false;
+            }
+
+            var nameCondition = automation.CreatePropertyCondition(
+                UIA.UIA_PropertyIds.UIA_NamePropertyId,
+                PageTitle);
+            var tabCondition = automation.CreatePropertyCondition(
+                UIA.UIA_PropertyIds.UIA_ControlTypePropertyId,
+                UIA.UIA_ControlTypeIds.UIA_TabItemControlTypeId);
+            var condition = automation.CreateAndCondition(nameCondition, tabCondition);
+            var tabs = browserWindow.FindAll(UIA.TreeScope.TreeScope_Subtree, condition);
+
+            for (var index = 0; index < tabs.Length; index++)
+            {
+                var tab = tabs.GetElement(index);
+                if (tab is null)
+                {
+                    continue;
+                }
+
+                if (tab.GetCurrentPattern(UIA.UIA_PatternIds.UIA_SelectionItemPatternId)
+                    is UIA.IUIAutomationSelectionItemPattern selectionItem)
+                {
+                    selectionItem.Select();
+                    tab.SetFocus();
+                    return true;
+                }
+            }
+        }
+        catch (COMException)
+        {
+        }
+        catch (InvalidCastException)
+        {
+        }
+
+        return false;
+    }
+#else
+    private static bool TryActivateExistingBrowserTab() => false;
+#endif
+
     private static bool TryActivateExistingBrowserWindow()
     {
         IntPtr matchingWindow = IntPtr.Zero;
 
         EnumWindows((window, _) =>
         {
-            if (!IsWindowVisible(window))
-            {
-                return true;
-            }
-
-            GetWindowThreadProcessId(window, out var processId);
-            if (processId == 0 || !IsBrowserProcess(processId))
+            if (!IsWindowVisible(window) || !IsBrowserProcessWindow(window))
             {
                 return true;
             }
@@ -85,12 +172,23 @@ public static class BrowserLauncher
             return false;
         }
 
-        if (IsIconic(matchingWindow))
+        return TryRestoreAndActivate(matchingWindow);
+    }
+
+    private static bool TryRestoreAndActivate(IntPtr window)
+    {
+        if (IsIconic(window))
         {
-            ShowWindow(matchingWindow, SwRestore);
+            ShowWindow(window, SwRestore);
         }
 
-        return SetForegroundWindow(matchingWindow);
+        return SetForegroundWindow(window);
+    }
+
+    private static bool IsBrowserProcessWindow(IntPtr window)
+    {
+        GetWindowThreadProcessId(window, out var processId);
+        return processId != 0 && IsBrowserProcess(processId);
     }
 
     private static bool IsBrowserProcess(uint processId)

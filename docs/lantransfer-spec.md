@@ -94,3 +94,82 @@ The current application makes users manually discover and type the LAN URL, tran
 - Multi-adapter enumeration cannot know which subnet the phone uses, so address selection is explicit.
 - Hiding the Windows console removes an easy diagnostic surface; startup failures must still be observable through process exit/logging, with future file logging left out of this slice.
 - The QRCoder package is the only new dependency and is confined to the Host.
+
+## CLI and Agent integration (planned follow-up)
+
+The browser remains the primary human-facing interface. A separate console CLI is planned as an automation interface for scripts, CI jobs, and coding Agents. The CLI treats LanTransfer as a local-network file and text transport rather than introducing a second transfer protocol.
+
+### Goals
+
+- Allow a script or Agent to send files and text without opening a browser or requiring interactive input.
+- Make service status and reachable connection URLs available in both human-readable and machine-readable formats.
+- Support build, test, backup, and report workflows that need to transfer artifacts to another LAN device.
+- Keep the existing browser, Host, HTTP API, token authorization, and storage behavior compatible.
+
+### Initial command scope
+
+The first CLI slice should cover the following commands:
+
+```text
+lantransfer start
+lantransfer status
+lantransfer url
+lantransfer send file <path>
+lantransfer send text <text>
+lantransfer files list
+lantransfer files download <fileName>
+```
+
+Representative automation examples:
+
+```bash
+lantransfer url --json
+lantransfer send file ./build.zip --to http://192.168.1.20:8765 --json
+echo "Build completed" | lantransfer send text --to http://192.168.1.20:8765
+```
+
+The CLI should support an explicit target URL, an optional access token, multiple-file input where practical, and text from standard input. File deletion, service stop, device aliases, directory watching, and device discovery are deferred until the first slice proves useful.
+
+### Functional requirements
+
+| ID | Requirement | Rationale | Acceptance criteria |
+|---|---|---|---|
+| FR-20 | Provide a non-interactive console CLI for starting and inspecting the service, obtaining connection URLs, sending files and text, and basic received-file access. | Enables scripts, CI, and Agent workflows without browser automation. | AC-23, AC-24 |
+| FR-21 | CLI transfer commands use the existing authenticated HTTP APIs and never access the Host's local storage files directly. | Avoids a second storage protocol and prevents cross-process file-write races. | AC-25 |
+| FR-22 | CLI commands support human-readable output by default and stable `--json` output for automation. Successful operations and failures must have stable exit codes. | Lets Agents and shell scripts reliably inspect results. | AC-26 |
+| FR-23 | CLI commands must be non-interactive by default, must not open a browser, and must support bounded request timeouts. | Makes behavior safe for unattended execution. | AC-27 |
+| FR-24 | Access tokens may be supplied through configuration or an environment variable as well as an explicit option; normal output must not print the token. | Supports protected Hosts without encouraging secret leakage through logs. | AC-28 |
+| FR-25 | Windows GUI/Host publishing remains a windowed executable, while the CLI is a console entry point. | Preserves the current tray experience while providing visible CLI output. | AC-29 |
+
+### Agent-facing contract
+
+- Standard output is reserved for command results; diagnostics and progress belong on standard error.
+- JSON output should contain a stable success/error shape, including the existing `errorCode` where the HTTP API provides one.
+- Exit code `0` means success; usage, authorization, connection, and transfer failures must be distinguishable and documented.
+- The CLI must not require a confirmation prompt for ordinary transfers. Commands that may later delete data or stop a service should require an explicit opt-in flag.
+- Target URLs must be explicit or come from an unambiguous configured default; the CLI must not silently choose an arbitrary remote device.
+
+### Technical direction
+
+- Add a console `LanTransfer.Cli` project alongside `LanTransfer.Core` and `LanTransfer.Host` when implementation begins.
+- Reuse a small HTTP client/protocol layer rather than duplicating upload, message, authorization, and error parsing logic in each command.
+- Keep the current Host as the service and browser/tray process. A CLI `start` command may launch or configure that Host, but lifecycle control should not require weakening the Windows single-instance behavior.
+- Do not make the CLI depend on browser automation, a frontend build tool, or platform-specific tray APIs.
+
+### Additional acceptance criteria
+
+| ID | Observable result | Verification |
+|---|---|---|
+| AC-23 | `start`, `status`, `url`, `send file`, and `send text` work without opening a browser; `start` can launch or configure the Host for unattended use. | CLI integration smoke tests. |
+| AC-24 | A file, text from an argument, and text from standard input can be transferred to a selected target URL. | CLI/API integration tests. |
+| AC-25 | CLI transfers go through the existing HTTP endpoints and preserve token authorization and stable API errors. | Authenticated and unauthorized integration tests. |
+| AC-26 | Human output is readable; `--json` output is valid, stable JSON and successful/failing commands return documented exit codes. | Golden-output and process exit-code tests. |
+| AC-27 | CLI execution is non-interactive, does not launch a browser, and fails within the configured timeout when the target is unavailable. | Unattended process test. |
+| AC-28 | Tokens supplied through configuration or environment variables are accepted and are absent from normal output and error messages. | Secret-redaction test. |
+| AC-29 | Windows Host remains windowless with tray behavior, while the published CLI writes usable output to a console. | Windows publish smoke test. |
+
+### Follow-up risks
+
+- Passing tokens directly on a command line can expose them through shell history or process inspection; environment/configuration input should be preferred and documented.
+- A CLI cannot infer which LAN URL is reachable from the target device, so target selection remains explicit and should reuse the existing connection URL data.
+- File upload and text send are currently one-way operations from the CLI perspective; a useful `pull` or remote-to-local workflow may require additional API semantics later.

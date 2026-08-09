@@ -17,12 +17,17 @@
 
   <PropertyGroup Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')) Or ('$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT')">
     <OutputType>WinExe</OutputType>
+    <DefineConstants>$(DefineConstants);WINDOWS_UI_AUTOMATION</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <ProjectReference Include="..\LanTransfer.Core\LanTransfer.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win-')) Or ('$(RuntimeIdentifier)' == '' And '$(OS)' == 'Windows_NT')">
+    <PackageReference Include="Interop.UIAutomationClient" Version="10.19041.0" />
   </ItemGroup>
 
   <ItemGroup>
