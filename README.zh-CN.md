@@ -146,7 +146,7 @@ Windows Release 同时会生成 `LanTransfer-版本号-win-x64-Setup.exe` 安装
 本地生成 Windows 安装包需要先安装 Inno Setup 6，然后运行：
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 1.0.0
+.\scripts\build-installer.ps1 -Version 0.4.0
 ```
 
 ## 项目结构

@@ -3,7 +3,7 @@
 #define MyAppExeName "lantransfer.exe"
 
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "0.4.0"
 #endif
 
 #ifndef SourceDir
