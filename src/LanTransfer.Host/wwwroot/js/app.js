@@ -376,6 +376,12 @@ function resizeMessageInput() {
 
 async function openConnectDialog() {
     dom.moreMenu.open = false;
+
+    if (dom.connectDialog.open) {
+        dom.connectDialog.focus();
+        return;
+    }
+
     dom.connectLoading.hidden = false;
     dom.connectContent.hidden = true;
     dom.connectError.hidden = true;

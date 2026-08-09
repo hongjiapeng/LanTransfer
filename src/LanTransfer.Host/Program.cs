@@ -15,6 +15,21 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QRCoder;
 
+Mutex? singleInstanceMutex = null;
+if (OperatingSystem.IsWindows())
+{
+    singleInstanceMutex = new Mutex(
+        initiallyOwned: true,
+        name: @"Local\LanTransfer.SingleInstance",
+        createdNew: out var createdNew);
+
+    if (!createdNew)
+    {
+        singleInstanceMutex.Dispose();
+        return;
+    }
+}
+
 const long MultipartOverheadAllowanceBytes = 16L * 1024 * 1024;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -291,7 +306,14 @@ app.Lifetime.ApplicationStarted.Register(() =>
     }
 });
 
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    singleInstanceMutex?.Dispose();
+}
 
 static bool IsAuthorized(HttpContext context, LanTransferOptions options)
 {

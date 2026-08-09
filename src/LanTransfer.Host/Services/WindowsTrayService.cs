@@ -13,7 +13,6 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     private const int WmClose = 0x0010;
     private const int WmDestroy = 0x0002;
     private const int WmLButtonUp = 0x0202;
-    private const int WmLButtonDblClk = 0x0203;
     private const int WmRButtonUp = 0x0205;
     private const int TrayCallbackMessage = WmApp + 1;
     private const uint NimAdd = 0x00000000;
@@ -172,7 +171,6 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
             switch (unchecked((int)lParam.ToInt64()))
             {
                 case WmLButtonUp:
-                case WmLButtonDblClk:
                     BrowserLauncher.TryOpen(_urls.LocalUrl, _logger);
                     return IntPtr.Zero;
                 case WmRButtonUp:
