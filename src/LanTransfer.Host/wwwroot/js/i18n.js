@@ -1,5 +1,5 @@
 (function () {
-    const supported = ['en', 'zh-CN'];
+    const supported = ['en', 'zh-CN', 'zh-TW'];
     const fallback = 'en';
 
     const state = {
@@ -20,6 +20,9 @@
             }
 
             if (candidate && candidate.toLowerCase().startsWith('zh')) {
+                if (candidate.toLowerCase().includes('hant') || candidate.toLowerCase().includes('tw')) {
+                    return 'zh-TW';
+                }
                 return 'zh-CN';
             }
         }

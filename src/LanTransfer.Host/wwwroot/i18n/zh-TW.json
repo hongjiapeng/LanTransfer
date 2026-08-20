@@ -1,0 +1,85 @@
+{
+  "app": {
+    "title": "LanTransfer",
+    "subtitle": "在同一個區域網路內，在手機、平板和電腦之間快速傳輸檔案。"
+  },
+  "device": {
+    "defaultName": "DESKTOP-01",
+    "connecting": "正在連線…",
+    "connected": "已連線，可以傳輸檔案",
+    "disconnected": "連線已中斷",
+    "ready": "就緒"
+  },
+  "date": {
+    "today": "今天",
+    "yesterday": "昨天"
+  },
+  "upload": {
+    "dropHint": "將檔案拖曳至此，或選擇檔案",
+    "mobileHint": "選擇檔案送出",
+    "selectFiles": "選擇檔案",
+    "sending": "傳送中 {percent}%",
+    "sent": "已傳送",
+    "success": "檔案已傳送。",
+    "failed": "傳送失敗"
+  },
+  "menu": {
+    "more": "更多選項"
+  },
+  "composer": {
+    "placeholder": "輸入備註或傳送檔案",
+    "send": "傳送"
+  },
+  "connect": {
+    "action": "連線新裝置",
+    "title": "連線新裝置",
+    "description": "用同一區域網路內的手機掃描二維碼，即可開啟此頁面。",
+    "loading": "正在尋找區域網路位址…",
+    "address": "連線位址",
+    "copy": "複製連結",
+    "copied": "連線連結已複製。",
+    "help": "兩台裝置必須連線到同一區域網路。如果一個位址無法開啟，請嘗試其他位址。",
+    "localhostWarning": "未找到區域網路位址；localhost 只能在目前電腦上使用。",
+    "qrAlt": "包含所選 LanTransfer 位址的二維碼",
+    "close": "關閉"
+  },
+  "files": {
+    "title": "檔案",
+    "actions": "檔案操作",
+    "empty": "暫無檔案",
+    "download": "下載",
+    "copyLink": "複製連結",
+    "linkCopied": "檔案連結已複製。",
+    "reveal": "所在資料夾",
+    "revealed": "已在資料夾中顯示。",
+    "size": "大小",
+    "type": "類型"
+  },
+  "footer": {
+    "localNetworkOnly": "僅在區域網路內傳輸"
+  },
+  "errors": {
+    "fileTooLarge": "檔案過大。",
+    "fileNotFound": "檔案不存在。",
+    "invalidFileName": "檔案名稱無效。",
+    "unauthorized": "未授權。",
+    "uploadFailed": "檔案上傳失敗。",
+    "invalidMessage": "請輸入 1 到 4000 個字元。",
+    "messageFailed": "文字訊息儲存失敗。",
+    "noConnectAddress": "沒有可用的連線位址。",
+    "revealNotAvailable": "僅可在主電腦上開啟檔案所在位置。",
+    "revealFailed": "無法開啟檔案所在位置。",
+    "copyFailed": "無法複製連結。",
+    "networkError": "網路錯誤。"
+  },
+  "language": {
+    "label": "語言",
+    "english": "English",
+    "chinese": "簡體中文",
+    "traditional": "繁體中文"
+  },
+  "accessToken": {
+    "label": "存取權杖",
+    "placeholder": "選填權杖"
+  }
+}
