@@ -45,6 +45,7 @@
   },
   "files": {
     "title": "Files",
+    "actions": "File actions",
     "empty": "No files yet",
     "download": "Download",
     "copyLink": "Copy link",

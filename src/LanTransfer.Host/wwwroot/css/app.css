@@ -371,6 +371,7 @@ button {
     grid-template-columns: 62px minmax(0, 1fr);
     gap: 14px;
     align-items: center;
+    position: relative;
     padding: 12px 14px;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -386,11 +387,15 @@ button {
 .file-title,
 .file-meta,
 .file-action,
-.file-action-button,
 .status-text,
 .progress-track {
     min-width: 0;
     max-width: 100%;
+}
+
+.file-card-content {
+    min-width: 0;
+    padding-right: 24px;
 }
 
 .progress-track {
@@ -446,24 +451,82 @@ button {
     min-height: 24px;
 }
 
-.file-action-button {
-    min-height: 26px;
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    color: var(--text);
-    background: #ffffff;
-    text-decoration: none;
-    font-size: 12px;
+.file-menu-trigger {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #777b78;
+    opacity: 0;
+    transition: opacity 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
-button.file-action-button:hover,
-a.file-action-button:hover {
-    border-color: #c8cbc7;
-    background: var(--soft);
+.file-menu-trigger span {
+    display: block;
+    transform: translateY(-2px);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.file-card:hover .file-menu-trigger,
+.file-menu-trigger:focus-visible,
+.file-menu-trigger[aria-expanded="true"] {
+    opacity: 1;
+}
+
+.file-menu-trigger:hover,
+.file-menu-trigger:focus-visible,
+.file-menu-trigger[aria-expanded="true"] {
+    outline: none;
+    background: #f0f1ef;
+    color: var(--text);
+}
+
+.file-context-menu {
+    position: fixed;
+    z-index: 50;
+    width: 164px;
+    padding: 6px;
+    border: 1px solid rgba(23, 23, 23, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(12px);
+}
+
+.file-menu-item {
+    width: 100%;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.file-menu-item:hover,
+.file-menu-item:focus-visible {
+    outline: none;
+    background: #f0f1ef;
+}
+
+@media (hover: none) {
+    .file-menu-trigger {
+        opacity: 0.72;
+    }
 }
 
 .status-text {

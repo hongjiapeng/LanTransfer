@@ -34,6 +34,8 @@ const dom = {
     copyConnectUrl: document.getElementById('copyConnectUrl')
 };
 
+let openFileMenuState = null;
+
 function t(key, params) {
     return window.lanTransferI18n.t(key, params);
 }
@@ -143,15 +145,6 @@ function createDateDivider(value) {
     return divider;
 }
 
-function createActionButton(label, onClick) {
-    const button = document.createElement('button');
-    button.className = 'file-action-button';
-    button.type = 'button';
-    button.textContent = label;
-    button.addEventListener('click', onClick);
-    return button;
-}
-
 async function copyText(value, successKey) {
     let copied = false;
     try {
@@ -180,6 +173,111 @@ async function revealFile(fileName) {
     }
 }
 
+function closeFileMenu({ restoreFocus = false } = {}) {
+    if (!openFileMenuState) {
+        return;
+    }
+
+    const { menu, trigger } = openFileMenuState;
+    menu.remove();
+    trigger?.setAttribute('aria-expanded', 'false');
+    openFileMenuState = null;
+
+    if (restoreFocus && trigger?.isConnected) {
+        trigger.focus({ preventScroll: true });
+    }
+}
+
+function createFileMenuItem(label, { href, onSelect } = {}) {
+    const item = document.createElement(href ? 'a' : 'button');
+    item.className = 'file-menu-item';
+    item.setAttribute('role', 'menuitem');
+    item.textContent = label;
+
+    if (href) {
+        item.href = href;
+        item.download = '';
+        item.addEventListener('click', () => closeFileMenu());
+    } else {
+        item.type = 'button';
+        item.addEventListener('click', async () => {
+            closeFileMenu();
+            await onSelect?.();
+        });
+    }
+
+    return item;
+}
+
+function openFileMenu(file, { x, y, trigger = null, alignRight = false }) {
+    closeFileMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'file-context-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', t('files.actions'));
+
+    const downloadUrl = withToken(file.downloadUrl);
+    const absoluteUrl = new URL(downloadUrl, window.location.href).toString();
+    menu.appendChild(createFileMenuItem(t('files.download'), { href: downloadUrl }));
+    menu.appendChild(createFileMenuItem(t('files.copyLink'), {
+        onSelect: () => copyText(absoluteUrl, 'files.linkCopied')
+    }));
+
+    if (state.canRevealFiles) {
+        menu.appendChild(createFileMenuItem(t('files.reveal'), {
+            onSelect: () => revealFile(file.fileName)
+        }));
+    }
+
+    document.body.appendChild(menu);
+    const bounds = menu.getBoundingClientRect();
+    const edge = 8;
+    const preferredLeft = alignRight ? x - bounds.width : x;
+    const left = Math.max(edge, Math.min(preferredLeft, window.innerWidth - bounds.width - edge));
+    const top = Math.max(edge, Math.min(y, window.innerHeight - bounds.height - edge));
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+
+    trigger?.setAttribute('aria-expanded', 'true');
+    openFileMenuState = { menu, trigger };
+    menu.querySelector('[role="menuitem"]')?.focus({ preventScroll: true });
+}
+
+function attachFileMenu(card, file) {
+    const trigger = document.createElement('button');
+    trigger.className = 'file-menu-trigger';
+    trigger.type = 'button';
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.setAttribute('aria-label', t('files.actions'));
+    trigger.title = t('files.actions');
+    trigger.innerHTML = '<span aria-hidden="true">•••</span>';
+
+    trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        if (openFileMenuState?.trigger === trigger) {
+            closeFileMenu({ restoreFocus: true });
+            return;
+        }
+
+        const bounds = trigger.getBoundingClientRect();
+        openFileMenu(file, {
+            x: bounds.right,
+            y: bounds.bottom + 6,
+            trigger,
+            alignRight: true
+        });
+    });
+
+    card.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        openFileMenu(file, { x: event.clientX, y: event.clientY, trigger });
+    });
+
+    card.appendChild(trigger);
+}
+
 function renderFileMessage(file, direction = 'incoming') {
     const row = document.createElement('article');
     row.className = `message-row ${direction}`;
@@ -190,6 +288,7 @@ function renderFileMessage(file, direction = 'incoming') {
 
     const visual = createVisual(file);
     const content = document.createElement('div');
+    content.className = 'file-card-content';
 
     const title = document.createElement('h2');
     title.className = 'file-title';
@@ -199,31 +298,22 @@ function renderFileMessage(file, direction = 'incoming') {
     meta.className = 'file-meta';
     meta.textContent = `${formatFileSize(file.size)} · ${fileType(file.fileName)}`;
 
-    const action = document.createElement('div');
-    action.className = 'file-action';
-
     if (direction === 'incoming') {
-        const link = document.createElement('a');
-        link.className = 'file-action-button';
-        link.href = withToken(file.downloadUrl);
-        link.textContent = `↓ ${t('files.download')}`;
-        action.appendChild(link);
-
-        const absoluteUrl = new URL(withToken(file.downloadUrl), window.location.href).toString();
-        action.appendChild(createActionButton(t('files.copyLink'), () => copyText(absoluteUrl, 'files.linkCopied')));
-
-        if (state.canRevealFiles) {
-            action.appendChild(createActionButton(t('files.reveal'), () => revealFile(file.fileName)));
-        }
+        content.append(title, meta);
     } else {
+        const action = document.createElement('div');
+        action.className = 'file-action';
         const status = document.createElement('span');
         status.className = 'status-text';
         status.textContent = `✓ ${t('upload.sent')}`;
         action.appendChild(status);
+        content.append(title, meta, action);
     }
 
-    content.append(title, meta, action);
     card.append(visual, content);
+    if (direction === 'incoming') {
+        attachFileMenu(card, file);
+    }
     row.append(...(direction === 'outgoing' ? [time, card] : [card, time]));
     dom.timeline.appendChild(row);
     return row;
@@ -336,7 +426,7 @@ async function refreshHealth() {
 }
 
 async function refreshTimeline({ preserveScroll = false } = {}) {
-    if (state.isUploading || state.isSendingMessage) {
+    if (state.isUploading || state.isSendingMessage || openFileMenuState) {
         return;
     }
 
@@ -535,6 +625,22 @@ function setupEvents() {
     dom.connectButton.addEventListener('click', openConnectDialog);
     dom.connectUrlSelect.addEventListener('change', updateConnectUrl);
     dom.copyConnectUrl.addEventListener('click', copyConnectUrl);
+
+    document.addEventListener('pointerdown', event => {
+        if (openFileMenuState &&
+            !openFileMenuState.menu.contains(event.target) &&
+            !openFileMenuState.trigger?.contains(event.target)) {
+            closeFileMenu();
+        }
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && openFileMenuState) {
+            event.preventDefault();
+            closeFileMenu({ restoreFocus: true });
+        }
+    });
+    window.addEventListener('resize', () => closeFileMenu());
+    dom.timeline.addEventListener('scroll', () => closeFileMenu(), { passive: true });
 
     window.addEventListener('offline', () => setConnectionStatus('disconnected'));
     window.addEventListener('online', () => {
