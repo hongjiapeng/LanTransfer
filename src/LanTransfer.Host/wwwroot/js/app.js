@@ -640,7 +640,15 @@ function setupEvents() {
         }
     });
     window.addEventListener('resize', () => closeFileMenu());
-    dom.timeline.addEventListener('scroll', () => closeFileMenu(), { passive: true });
+    let timelineScrollEndTimer;
+    dom.timeline.addEventListener('scroll', () => {
+        closeFileMenu();
+        dom.timeline.classList.add('is-scrolling');
+        clearTimeout(timelineScrollEndTimer);
+        timelineScrollEndTimer = setTimeout(() => {
+            dom.timeline.classList.remove('is-scrolling');
+        }, 700);
+    }, { passive: true });
 
     window.addEventListener('offline', () => setConnectionStatus('disconnected'));
     window.addEventListener('online', () => {

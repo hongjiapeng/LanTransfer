@@ -296,8 +296,14 @@ button {
     flex-direction: column;
     gap: 14px;
     scrollbar-width: thin;
-    scrollbar-color: #c3c6c2 transparent;
+    scrollbar-color: transparent transparent;
     scrollbar-gutter: stable;
+}
+
+.timeline:hover,
+.timeline:focus-within,
+.timeline.is-scrolling {
+    scrollbar-color: #c3c6c2 transparent;
 }
 
 .timeline::-webkit-scrollbar,
@@ -329,6 +335,20 @@ button {
     display: none;
     width: 0;
     height: 0;
+}
+
+.timeline::-webkit-scrollbar-thumb {
+    background-color: transparent;
+}
+
+.timeline:hover::-webkit-scrollbar-thumb,
+.timeline:focus-within::-webkit-scrollbar-thumb,
+.timeline.is-scrolling::-webkit-scrollbar-thumb {
+    background-color: #c3c6c2;
+}
+
+.timeline:hover::-webkit-scrollbar-thumb:hover {
+    background-color: #9ea29d;
 }
 
 .message-row {
