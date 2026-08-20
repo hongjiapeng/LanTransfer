@@ -63,6 +63,27 @@ public sealed class LocalTextMessageStore : ITextMessageStore, IDisposable
         }
     }
 
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var messages = await ReadUnsafeAsync(cancellationToken);
+            var removed = messages.RemoveAll(message => message.Id == id) > 0;
+            if (!removed)
+            {
+                return false;
+            }
+
+            await WriteUnsafeAsync(messages, cancellationToken);
+            return true;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public void Dispose()
     {
         _gate.Dispose();

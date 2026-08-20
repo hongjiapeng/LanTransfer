@@ -52,8 +52,21 @@
     "linkCopied": "File link copied.",
     "reveal": "Show in folder",
     "revealed": "File shown in its folder.",
+    "deleted": "File moved to the LanTransfer trash.",
     "size": "Size",
     "type": "Type"
+  },
+  "messages": {
+    "actions": "Text actions",
+    "deleted": "Text item deleted."
+  },
+  "delete": {
+    "action": "Delete",
+    "title": "Delete this item?",
+    "filePrompt": "Move “{name}” to the LanTransfer trash?",
+    "messagePrompt": "Delete this text item? This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
   },
   "footer": {
     "localNetworkOnly": "Transfer only on your local network"
@@ -65,7 +78,10 @@
     "unauthorized": "Unauthorized.",
     "uploadFailed": "File upload failed.",
     "invalidMessage": "Enter between 1 and 4,000 characters.",
+    "messageNotFound": "Text item was not found.",
     "messageFailed": "Message could not be saved.",
+    "deleteFailed": "The item could not be deleted.",
+    "hostOnlyAction": "This action is only available on the host computer.",
     "noConnectAddress": "No connection address is available.",
     "revealNotAvailable": "File location can only be opened on the host computer.",
     "revealFailed": "The file location could not be opened.",

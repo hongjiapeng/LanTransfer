@@ -15,4 +15,6 @@ public interface IFileInbox
     Task<FileItem?> GetAsync(string fileName, CancellationToken cancellationToken = default);
 
     Task<Stream?> OpenReadAsync(string fileName, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteAsync(string fileName, CancellationToken cancellationToken = default);
 }
