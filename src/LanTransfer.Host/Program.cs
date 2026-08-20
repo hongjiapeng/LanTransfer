@@ -99,7 +99,8 @@ app.MapGet("/api/health", () => Results.Ok(new
 
 app.MapGet("/api/capabilities", (HttpContext context) => Results.Ok(new
 {
-    canRevealFiles = OperatingSystem.IsWindows() && IsLoopbackRequest(context)
+    canRevealFiles = OperatingSystem.IsWindows() && IsLoopbackRequest(context),
+    canManageHistory = IsLoopbackRequest(context)
 }));
 
 app.MapGet("/api/connect", (
@@ -179,6 +180,35 @@ app.MapPost("/api/messages", async (
     catch
     {
         return Results.Json(ErrorResult.MessageFailed(), statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
+app.MapDelete("/api/messages/{id:guid}", async (
+    Guid id,
+    HttpContext context,
+    ITextMessageStore messages,
+    IOptions<LanTransferOptions> options,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    if (!IsLoopbackRequest(context))
+    {
+        return Results.Json(ErrorResult.HostOnlyAction(), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        return await messages.DeleteAsync(id, cancellationToken)
+            ? Results.Ok(new { deleted = true })
+            : Results.NotFound(ErrorResult.MessageNotFound());
+    }
+    catch
+    {
+        return Results.Json(ErrorResult.DeleteFailed(), statusCode: StatusCodes.Status500InternalServerError);
     }
 });
 
@@ -293,6 +323,39 @@ app.MapPost("/api/files/{fileName}/reveal", async (
         return Results.Json(
             new ErrorResult("reveal_failed", "File location could not be opened."),
             statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
+app.MapDelete("/api/files/{*fileName}", async (
+    string fileName,
+    HttpContext context,
+    IFileInbox inbox,
+    IOptions<LanTransferOptions> options,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    if (!IsLoopbackRequest(context))
+    {
+        return Results.Json(ErrorResult.HostOnlyAction(), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        return await inbox.DeleteAsync(fileName, cancellationToken)
+            ? Results.Ok(new { deleted = true })
+            : Results.NotFound(ErrorResult.FileNotFound());
+    }
+    catch (FileStorageException ex) when (ex.ErrorCode == ErrorCodes.InvalidFileName)
+    {
+        return Results.BadRequest(ex.ToErrorResult());
+    }
+    catch
+    {
+        return Results.Json(ErrorResult.DeleteFailed(), statusCode: StatusCodes.Status500InternalServerError);
     }
 });
 

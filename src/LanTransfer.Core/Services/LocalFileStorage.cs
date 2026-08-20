@@ -115,6 +115,25 @@ public sealed class LocalFileStorage : IFileStorage
         return Task.FromResult<Stream?>(stream);
     }
 
+    public Task<bool> DeleteAsync(string fileName, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var path = ResolveExistingFilePath(fileName);
+        if (path is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        var trashRoot = Path.Combine(_storageRoot, ".lantransfer", "trash");
+        var trashEntry = Path.Combine(
+            trashRoot,
+            $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(trashEntry);
+        File.Move(path, Path.Combine(trashEntry, Path.GetFileName(path)), overwrite: false);
+        return Task.FromResult(true);
+    }
+
     private string? ResolveExistingFilePath(string fileName)
     {
         var safeFileName = RequireSafeLookupFileName(fileName);

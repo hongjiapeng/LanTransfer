@@ -37,6 +37,7 @@
                             <select id="languageSelect">
                                 <option value="en" data-i18n="language.english">English</option>
                                 <option value="zh-CN" data-i18n="language.chinese">Simplified Chinese</option>
+                                <option value="zh-TW" data-i18n="language.traditional">Traditional Chinese</option>
                             </select>
                         </label>
                         <label>
@@ -56,13 +57,30 @@
                 <input id="fileInput" type="file" multiple>
                 <button id="chooseButton" class="add-button" type="button" data-i18n-title="upload.selectFiles" title="Choose files" aria-label="Choose files"><span class="add-icon" aria-hidden="true"></span></button>
                 <textarea id="messageInput" class="message-input" rows="1" maxlength="4000" data-i18n-placeholder="composer.placeholder" placeholder="Enter a note or send a file" aria-label="Enter a note or send a file"></textarea>
-                <button id="sendButton" class="send-button" type="button" data-i18n-title="composer.send" title="Send" aria-label="Send">➤</button>
+                <button id="sendButton" class="send-button" type="button" data-i18n-title="composer.send" title="Send" aria-label="Send">
+                    <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3.75 4.25 21 12 3.75 19.75l2.3-6.45L14.5 12l-8.45-1.3-2.3-6.45Z"></path>
+                    </svg>
+                </button>
                 <p class="local-note"><span class="note-lock" aria-hidden="true">🔒</span><span data-i18n="footer.localNetworkOnly">Transfer only on your local network</span></p>
             </footer>
 
             <div class="toast" id="toast" hidden></div>
         </section>
     </main>
+
+    <dialog id="deleteDialog" class="delete-dialog" aria-labelledby="deleteTitle" aria-describedby="deleteDescription">
+        <form method="dialog" class="delete-surface">
+            <header>
+                <h2 id="deleteTitle" data-i18n="delete.title">Delete this item?</h2>
+                <p id="deleteDescription"></p>
+            </header>
+            <div class="delete-actions">
+                <button class="delete-cancel" type="submit" value="cancel" data-i18n="delete.cancel">Cancel</button>
+                <button class="delete-confirm" type="submit" value="confirm" data-i18n="delete.confirm">Delete</button>
+            </div>
+        </form>
+    </dialog>
 
     <dialog id="connectDialog" class="connect-dialog" aria-labelledby="connectTitle">
         <form method="dialog" class="dialog-surface">

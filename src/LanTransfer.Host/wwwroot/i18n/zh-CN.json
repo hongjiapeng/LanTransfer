@@ -52,8 +52,21 @@
     "linkCopied": "文件链接已复制。",
     "reveal": "所在位置",
     "revealed": "已在文件夹中显示。",
+    "deleted": "文件已移入 LanTransfer 回收区。",
     "size": "大小",
     "type": "类型"
+  },
+  "messages": {
+    "actions": "文字操作",
+    "deleted": "文字记录已删除。"
+  },
+  "delete": {
+    "action": "删除",
+    "title": "删除这个项目？",
+    "filePrompt": "将“{name}”移入 LanTransfer 回收区？",
+    "messagePrompt": "删除这条文字记录？此操作无法撤销。",
+    "cancel": "取消",
+    "confirm": "删除"
   },
   "footer": {
     "localNetworkOnly": "仅在本地网络中传输"
@@ -65,7 +78,10 @@
     "unauthorized": "未授权。",
     "uploadFailed": "文件上传失败。",
     "invalidMessage": "请输入 1 到 4000 个字符。",
+    "messageNotFound": "文字记录不存在。",
     "messageFailed": "文字消息保存失败。",
+    "deleteFailed": "无法删除该项目。",
+    "hostOnlyAction": "仅可在运行 LanTransfer 的主机电脑上执行此操作。",
     "noConnectAddress": "没有可用的连接地址。",
     "revealNotAvailable": "仅可在宿主电脑上打开文件所在位置。",
     "revealFailed": "无法打开文件所在位置。",
@@ -75,7 +91,8 @@
   "language": {
     "label": "语言",
     "english": "English",
-    "chinese": "简体中文"
+    "chinese": "简体中文",
+    "traditional": "繁體中文"
   },
   "accessToken": {
     "label": "访问令牌",

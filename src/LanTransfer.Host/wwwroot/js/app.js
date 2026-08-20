@@ -4,6 +4,7 @@ const state = {
     isSendingMessage: false,
     connectionStatus: 'connecting',
     canRevealFiles: false,
+    canManageHistory: false,
     sentMessageIds: new Set(),
     connectUrls: []
 };
@@ -31,7 +32,9 @@ const dom = {
     connectUrlSelect: document.getElementById('connectUrlSelect'),
     connectUrl: document.getElementById('connectUrl'),
     connectHelp: document.getElementById('connectHelp'),
-    copyConnectUrl: document.getElementById('copyConnectUrl')
+    copyConnectUrl: document.getElementById('copyConnectUrl'),
+    deleteDialog: document.getElementById('deleteDialog'),
+    deleteDescription: document.getElementById('deleteDescription')
 };
 
 let openFileMenuState = null;
@@ -173,6 +176,48 @@ async function revealFile(fileName) {
     }
 }
 
+function confirmDelete(description) {
+    dom.deleteDescription.textContent = description;
+    dom.deleteDialog.returnValue = 'cancel';
+    dom.deleteDialog.showModal();
+
+    return new Promise(resolve => {
+        dom.deleteDialog.addEventListener('close', () => {
+            resolve(dom.deleteDialog.returnValue === 'confirm');
+        }, { once: true });
+    });
+}
+
+async function deleteFile(file) {
+    if (!await confirmDelete(t('delete.filePrompt', { name: file.fileName }))) {
+        return;
+    }
+
+    try {
+        await fetchJson(`/api/files/${encodeURIComponent(file.fileName)}`, { method: 'DELETE' });
+        showToast(t('files.deleted'));
+        await refreshTimeline();
+    } catch (error) {
+        showToast(t(errorKey(error.message)), true);
+    }
+}
+
+async function deleteMessage(message) {
+    if (!await confirmDelete(t('delete.messagePrompt'))) {
+        return;
+    }
+
+    try {
+        await fetchJson(`/api/messages/${encodeURIComponent(message.id)}`, { method: 'DELETE' });
+        state.sentMessageIds.delete(message.id);
+        persistSentMessageIds();
+        showToast(t('messages.deleted'));
+        await refreshTimeline();
+    } catch (error) {
+        showToast(t(errorKey(error.message)), true);
+    }
+}
+
 function closeFileMenu({ restoreFocus = false } = {}) {
     if (!openFileMenuState) {
         return;
@@ -188,9 +233,10 @@ function closeFileMenu({ restoreFocus = false } = {}) {
     }
 }
 
-function createFileMenuItem(label, { href, onSelect } = {}) {
+function createFileMenuItem(label, { href, onSelect, danger = false } = {}) {
     const item = document.createElement(href ? 'a' : 'button');
     item.className = 'file-menu-item';
+    item.classList.toggle('danger', danger);
     item.setAttribute('role', 'menuitem');
     item.textContent = label;
 
@@ -207,6 +253,28 @@ function createFileMenuItem(label, { href, onSelect } = {}) {
     }
 
     return item;
+}
+
+function createMenuSeparator() {
+    const separator = document.createElement('div');
+    separator.className = 'file-menu-separator';
+    separator.setAttribute('role', 'separator');
+    return separator;
+}
+
+function showFileMenu(menu, { x, y, trigger = null, alignRight = false }) {
+    document.body.appendChild(menu);
+    const bounds = menu.getBoundingClientRect();
+    const edge = 8;
+    const preferredLeft = alignRight ? x - bounds.width : x;
+    const left = Math.max(edge, Math.min(preferredLeft, window.innerWidth - bounds.width - edge));
+    const top = Math.max(edge, Math.min(y, window.innerHeight - bounds.height - edge));
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+
+    trigger?.setAttribute('aria-expanded', 'true');
+    openFileMenuState = { menu, trigger };
+    menu.querySelector('[role="menuitem"]')?.focus({ preventScroll: true });
 }
 
 function openFileMenu(file, { x, y, trigger = null, alignRight = false }) {
@@ -230,28 +298,40 @@ function openFileMenu(file, { x, y, trigger = null, alignRight = false }) {
         }));
     }
 
-    document.body.appendChild(menu);
-    const bounds = menu.getBoundingClientRect();
-    const edge = 8;
-    const preferredLeft = alignRight ? x - bounds.width : x;
-    const left = Math.max(edge, Math.min(preferredLeft, window.innerWidth - bounds.width - edge));
-    const top = Math.max(edge, Math.min(y, window.innerHeight - bounds.height - edge));
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
+    if (state.canManageHistory) {
+        menu.appendChild(createMenuSeparator());
+        menu.appendChild(createFileMenuItem(t('delete.action'), {
+            danger: true,
+            onSelect: () => deleteFile(file)
+        }));
+    }
 
-    trigger?.setAttribute('aria-expanded', 'true');
-    openFileMenuState = { menu, trigger };
-    menu.querySelector('[role="menuitem"]')?.focus({ preventScroll: true });
+    showFileMenu(menu, { x, y, trigger, alignRight });
 }
 
-function attachFileMenu(card, file) {
+function openTextMenu(message, { x, y, trigger = null, alignRight = false }) {
+    closeFileMenu();
+
+    const menu = document.createElement('div');
+    menu.className = 'file-context-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', t('messages.actions'));
+    menu.appendChild(createFileMenuItem(t('delete.action'), {
+        danger: true,
+        onSelect: () => deleteMessage(message)
+    }));
+
+    showFileMenu(menu, { x, y, trigger, alignRight });
+}
+
+function attachItemMenu(card, label, openMenu) {
     const trigger = document.createElement('button');
     trigger.className = 'file-menu-trigger';
     trigger.type = 'button';
     trigger.setAttribute('aria-haspopup', 'menu');
     trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', t('files.actions'));
-    trigger.title = t('files.actions');
+    trigger.setAttribute('aria-label', label);
+    trigger.title = label;
     trigger.innerHTML = '<span aria-hidden="true">•••</span>';
 
     trigger.addEventListener('click', event => {
@@ -262,7 +342,7 @@ function attachFileMenu(card, file) {
         }
 
         const bounds = trigger.getBoundingClientRect();
-        openFileMenu(file, {
+        openMenu({
             x: bounds.right,
             y: bounds.bottom + 6,
             trigger,
@@ -272,10 +352,18 @@ function attachFileMenu(card, file) {
 
     card.addEventListener('contextmenu', event => {
         event.preventDefault();
-        openFileMenu(file, { x: event.clientX, y: event.clientY, trigger });
+        openMenu({ x: event.clientX, y: event.clientY, trigger });
     });
 
     card.appendChild(trigger);
+}
+
+function attachFileMenu(card, file) {
+    attachItemMenu(card, t('files.actions'), options => openFileMenu(file, options));
+}
+
+function attachTextMenu(card, message) {
+    attachItemMenu(card, t('messages.actions'), options => openTextMenu(message, options));
 }
 
 function renderFileMessage(file, direction = 'incoming') {
@@ -328,6 +416,9 @@ function renderTextMessage(message) {
     const card = document.createElement('div');
     card.className = 'text-card';
     card.textContent = message.text;
+    if (state.canManageHistory) {
+        attachTextMenu(card, message);
+    }
 
     row.append(...(direction === 'outgoing' ? [time, card] : [card, time]));
     dom.timeline.appendChild(row);
@@ -693,7 +784,10 @@ function errorKey(errorCode) {
         unauthorized: 'errors.unauthorized',
         upload_failed: 'errors.uploadFailed',
         invalid_message: 'errors.invalidMessage',
+        message_not_found: 'errors.messageNotFound',
         message_failed: 'errors.messageFailed',
+        delete_failed: 'errors.deleteFailed',
+        host_only_action: 'errors.hostOnlyAction',
         no_connect_address: 'errors.noConnectAddress',
         reveal_not_available: 'errors.revealNotAvailable',
         reveal_failed: 'errors.revealFailed',
@@ -788,8 +882,10 @@ async function init() {
     try {
         const capabilities = await fetchJson('/api/capabilities');
         state.canRevealFiles = Boolean(capabilities.canRevealFiles);
+        state.canManageHistory = Boolean(capabilities.canManageHistory);
     } catch {
         state.canRevealFiles = false;
+        state.canManageHistory = false;
     }
     await refreshTimeline();
     window.setInterval(() => {

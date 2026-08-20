@@ -16,6 +16,14 @@ public sealed record ErrorResult(string ErrorCode, string Message)
 
     public static ErrorResult MessageFailed() => new(ErrorCodes.MessageFailed, "Message could not be saved.");
 
+    public static ErrorResult MessageNotFound() => new(ErrorCodes.MessageNotFound, "Message was not found.");
+
+    public static ErrorResult DeleteFailed() => new(ErrorCodes.DeleteFailed, "Item could not be deleted.");
+
+    public static ErrorResult HostOnlyAction() => new(
+        ErrorCodes.HostOnlyAction,
+        "This action is only available on the host computer.");
+
     public static ErrorResult NetworkError() => new(ErrorCodes.NetworkError, "Network error.");
 }
 
@@ -28,5 +36,8 @@ public static class ErrorCodes
     public const string UploadFailed = "upload_failed";
     public const string InvalidMessage = "invalid_message";
     public const string MessageFailed = "message_failed";
+    public const string MessageNotFound = "message_not_found";
+    public const string DeleteFailed = "delete_failed";
+    public const string HostOnlyAction = "host_only_action";
     public const string NetworkError = "network_error";
 }

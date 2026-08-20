@@ -1,5 +1,5 @@
 (function () {
-    const supported = ['en', 'zh-CN'];
+    const supported = ['en', 'zh-CN', 'zh-TW'];
     const fallback = 'en';
 
     const state = {
@@ -20,6 +20,10 @@
             }
 
             if (candidate && candidate.toLowerCase().startsWith('zh')) {
+                const localeParts = candidate.toLowerCase().replaceAll('_', '-').split('-');
+                if (localeParts.includes('hant') || ['tw', 'hk', 'mo'].some(region => localeParts.includes(region))) {
+                    return 'zh-TW';
+                }
                 return 'zh-CN';
             }
         }

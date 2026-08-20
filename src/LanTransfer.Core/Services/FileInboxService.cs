@@ -35,4 +35,9 @@ public sealed class FileInboxService : IFileInbox
     {
         return _storage.OpenReadAsync(fileName, cancellationToken);
     }
+
+    public Task<bool> DeleteAsync(string fileName, CancellationToken cancellationToken = default)
+    {
+        return _storage.DeleteAsync(fileName, cancellationToken);
+    }
 }
