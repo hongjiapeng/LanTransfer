@@ -7,7 +7,7 @@
     <AssemblyName>lantransfer</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Authors>LanTransfer contributors</Authors>
     <Description>A cross-platform LAN file transfer tool powered by .NET and a browser UI.</Description>
     <ApplicationIcon>wwwroot\assets\lantransfer.ico</ApplicationIcon>

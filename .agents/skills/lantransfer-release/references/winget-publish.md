@@ -21,10 +21,10 @@ The identifier is already accepted by WinGet. Preserve its casing and do not cre
 4. Confirm the release is public, immutable, licensed under MIT, and linked over HTTPS.
 5. Check the existing package and open `winget-pkgs` PRs for conflicts before creating a new version directory.
 
-For version `0.4.0`, the expected asset is:
+For release version `<version>`, the expected asset is:
 
 ```text
-https://github.com/hongjiapeng/LanTransfer/releases/download/v0.4.0/LanTransfer-0.4.0-win-x64-Setup.exe
+https://github.com/hongjiapeng/LanTransfer/releases/download/v<version>/LanTransfer-<version>-win-x64-Setup.exe
 ```
 
 Do not hard-code a future hash. Recalculate it from the final asset every release.
