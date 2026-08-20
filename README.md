@@ -142,7 +142,7 @@ The installer uses a per-user install location, `%LOCALAPPDATA%\Programs\LanTran
 To build the Windows installer locally, install Inno Setup 6 and run:
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.5.0
+.\scripts\build-installer.ps1 -Version 0.6.0
 ```
 
 ## Project Structure
