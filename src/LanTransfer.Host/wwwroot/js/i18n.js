@@ -20,7 +20,8 @@
             }
 
             if (candidate && candidate.toLowerCase().startsWith('zh')) {
-                if (candidate.toLowerCase().includes('hant') || candidate.toLowerCase().includes('tw')) {
+                const localeParts = candidate.toLowerCase().replaceAll('_', '-').split('-');
+                if (localeParts.includes('hant') || ['tw', 'hk', 'mo'].some(region => localeParts.includes(region))) {
                     return 'zh-TW';
                 }
                 return 'zh-CN';

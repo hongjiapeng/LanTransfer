@@ -72,13 +72,12 @@
     "copyFailed": "无法复制链接。",
     "networkError": "网络错误。"
   },
- "language": {
-   "label": "语言",
-   "english": "English",
-   "chinese": "简体中文"
-  ,
+  "language": {
+    "label": "语言",
+    "english": "English",
+    "chinese": "简体中文",
     "traditional": "繁體中文"
- },
+  },
   "accessToken": {
     "label": "访问令牌",
     "placeholder": "可选令牌"

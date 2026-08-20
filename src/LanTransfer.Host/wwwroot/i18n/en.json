@@ -72,13 +72,12 @@
     "copyFailed": "The link could not be copied.",
     "networkError": "Network error."
   },
- "language": {
-   "label": "Language",
-   "english": "English",
-   "chinese": "Simplified Chinese"
-  ,
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "chinese": "Simplified Chinese",
     "traditional": "Traditional Chinese"
- },
+  },
   "accessToken": {
     "label": "Access token",
     "placeholder": "Optional token"
