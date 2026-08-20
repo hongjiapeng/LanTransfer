@@ -14,6 +14,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QRCoder;
+using System.Diagnostics;
+using System.Net;
 
 Mutex? singleInstanceMutex = null;
 if (OperatingSystem.IsWindows())
@@ -93,6 +95,11 @@ app.MapGet("/api/health", () => Results.Ok(new
     status = "ok",
     name = "LanTransfer",
     deviceName = Environment.MachineName
+}));
+
+app.MapGet("/api/capabilities", (HttpContext context) => Results.Ok(new
+{
+    canRevealFiles = OperatingSystem.IsWindows() && IsLoopbackRequest(context)
 }));
 
 app.MapGet("/api/connect", (
@@ -243,6 +250,52 @@ app.MapGet("/api/files", async (
     return Results.Ok(files);
 });
 
+app.MapPost("/api/files/{fileName}/reveal", async (
+    string fileName,
+    HttpContext context,
+    IFileInbox inbox,
+    IOptions<LanTransferOptions> options,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsAuthorized(context, options.Value))
+    {
+        return Results.Json(ErrorResult.Unauthorized(), statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    if (!OperatingSystem.IsWindows() || !IsLoopbackRequest(context))
+    {
+        return Results.Json(
+            new ErrorResult("reveal_not_available", "File location can only be opened on the host computer."),
+            statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var file = await inbox.GetAsync(fileName, cancellationToken);
+        if (file is null)
+        {
+            return Results.NotFound(ErrorResult.FileNotFound());
+        }
+
+        var fullPath = Path.GetFullPath(Path.Combine(options.Value.StorageDirectory, file.FileName));
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{fullPath}\"")
+        {
+            UseShellExecute = true
+        });
+        return Results.Ok(new { revealed = true });
+    }
+    catch (FileStorageException ex) when (ex.ErrorCode == ErrorCodes.InvalidFileName)
+    {
+        return Results.BadRequest(ex.ToErrorResult());
+    }
+    catch
+    {
+        return Results.Json(
+            new ErrorResult("reveal_failed", "File location could not be opened."),
+            statusCode: StatusCodes.Status500InternalServerError);
+    }
+});
+
 app.MapGet("/api/files/{*fileName}", async (
     string fileName,
     HttpContext context,
@@ -328,6 +381,12 @@ static bool IsAuthorized(HttpContext context, LanTransferOptions options)
 
     return string.Equals(headerToken, options.AccessToken, StringComparison.Ordinal) ||
         string.Equals(queryToken, options.AccessToken, StringComparison.Ordinal);
+}
+
+static bool IsLoopbackRequest(HttpContext context)
+{
+    var remoteAddress = context.Connection.RemoteIpAddress;
+    return remoteAddress is not null && IPAddress.IsLoopback(remoteAddress);
 }
 
 static LanTransferOptions LoadOptions(IConfiguration configuration)

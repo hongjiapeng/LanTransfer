@@ -48,18 +48,13 @@
             </header>
 
             <section class="timeline-shell">
-                <div class="date-divider">
-                    <span></span>
-                    <strong data-i18n="date.today">Today</strong>
-                    <span></span>
-                </div>
                 <div class="timeline" id="timeline" aria-live="polite"></div>
                 <p class="empty-state" id="emptyState" data-i18n="files.empty" hidden>No files yet</p>
             </section>
 
             <footer class="composer">
                 <input id="fileInput" type="file" multiple>
-                <button id="chooseButton" class="add-button" type="button" data-i18n-title="upload.selectFiles" title="Choose files" aria-label="Choose files">+</button>
+                <button id="chooseButton" class="add-button" type="button" data-i18n-title="upload.selectFiles" title="Choose files" aria-label="Choose files"><span class="add-icon" aria-hidden="true"></span></button>
                 <textarea id="messageInput" class="message-input" rows="1" maxlength="4000" data-i18n-placeholder="composer.placeholder" placeholder="Enter a note or send a file" aria-label="Enter a note or send a file"></textarea>
                 <button id="sendButton" class="send-button" type="button" data-i18n-title="composer.send" title="Send" aria-label="Send">➤</button>
                 <p class="local-note"><span class="note-lock" aria-hidden="true">🔒</span><span data-i18n="footer.localNetworkOnly">Transfer only on your local network</span></p>

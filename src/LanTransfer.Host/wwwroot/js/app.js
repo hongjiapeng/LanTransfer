@@ -3,6 +3,7 @@ const state = {
     isUploading: false,
     isSendingMessage: false,
     connectionStatus: 'connecting',
+    canRevealFiles: false,
     sentMessageIds: new Set(),
     connectUrls: []
 };
@@ -123,11 +124,60 @@ function uploadFile(file, onProgress) {
 }
 
 function createTime(value) {
+    const date = new Date(value);
     const time = document.createElement('time');
     time.className = 'message-time';
-    time.dateTime = new Date(value).toISOString();
-    time.textContent = formatTime(value);
+    time.dateTime = date.toISOString();
+    time.textContent = formatTime(date);
+    time.title = formatFullDateTime(date);
     return time;
+}
+
+function createDateDivider(value) {
+    const divider = document.createElement('div');
+    divider.className = 'date-divider';
+
+    const label = document.createElement('strong');
+    label.textContent = formatDateLabel(value);
+    divider.append(document.createElement('span'), label, document.createElement('span'));
+    return divider;
+}
+
+function createActionButton(label, onClick) {
+    const button = document.createElement('button');
+    button.className = 'file-action-button';
+    button.type = 'button';
+    button.textContent = label;
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+async function copyText(value, successKey) {
+    let copied = false;
+    try {
+        await navigator.clipboard.writeText(value);
+        copied = true;
+    } catch {
+        const input = document.createElement('textarea');
+        input.value = value;
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        copied = document.execCommand('copy');
+        input.remove();
+    }
+
+    showToast(t(copied ? successKey : 'errors.copyFailed'), !copied);
+}
+
+async function revealFile(fileName) {
+    try {
+        await fetchJson(`/api/files/${encodeURIComponent(fileName)}/reveal`, { method: 'POST' });
+        showToast(t('files.revealed'));
+    } catch (error) {
+        showToast(t(errorKey(error.message)), true);
+    }
 }
 
 function renderFileMessage(file, direction = 'incoming') {
@@ -154,10 +204,17 @@ function renderFileMessage(file, direction = 'incoming') {
 
     if (direction === 'incoming') {
         const link = document.createElement('a');
-        link.className = 'download-button';
+        link.className = 'file-action-button';
         link.href = withToken(file.downloadUrl);
         link.textContent = `↓ ${t('files.download')}`;
         action.appendChild(link);
+
+        const absoluteUrl = new URL(withToken(file.downloadUrl), window.location.href).toString();
+        action.appendChild(createActionButton(t('files.copyLink'), () => copyText(absoluteUrl, 'files.linkCopied')));
+
+        if (state.canRevealFiles) {
+            action.appendChild(createActionButton(t('files.reveal'), () => revealFile(file.fileName)));
+        }
     } else {
         const status = document.createElement('span');
         status.className = 'status-text';
@@ -297,7 +354,14 @@ async function refreshTimeline({ preserveScroll = false } = {}) {
 
         dom.timeline.replaceChildren();
         dom.emptyState.hidden = items.length > 0;
+        let currentDateKey = '';
         for (const item of items) {
+            const itemDateKey = localDateKey(item.timestamp);
+            if (itemDateKey !== currentDateKey) {
+                dom.timeline.appendChild(createDateDivider(item.timestamp));
+                currentDateKey = itemDateKey;
+            }
+
             if (item.kind === 'file') {
                 renderFileMessage(item.value, 'incoming');
             } else {
@@ -425,20 +489,7 @@ function updateConnectUrl() {
 
 async function copyConnectUrl() {
     const url = dom.connectUrlSelect.value;
-    try {
-        await navigator.clipboard.writeText(url);
-        showToast(t('connect.copied'));
-    } catch {
-        const input = document.createElement('textarea');
-        input.value = url;
-        input.style.position = 'fixed';
-        input.style.opacity = '0';
-        document.body.appendChild(input);
-        input.select();
-        const copied = document.execCommand('copy');
-        input.remove();
-        showToast(t(copied ? 'connect.copied' : 'errors.copyFailed'), !copied);
-    }
+    await copyText(url, 'connect.copied');
 }
 
 function setupEvents() {
@@ -530,6 +581,8 @@ function errorKey(errorCode) {
         invalid_message: 'errors.invalidMessage',
         message_failed: 'errors.messageFailed',
         no_connect_address: 'errors.noConnectAddress',
+        reveal_not_available: 'errors.revealNotAvailable',
+        reveal_failed: 'errors.revealFailed',
         network_error: 'errors.networkError'
     };
     return map[errorCode] || 'errors.networkError';
@@ -564,6 +617,40 @@ function formatTime(value) {
     return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatFullDateTime(value) {
+    return new Date(value).toLocaleString([], {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function localDateKey(value) {
+    const date = new Date(value);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function formatDateLabel(value) {
+    const date = new Date(value);
+    const today = new Date();
+    const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+
+    if (localDateKey(date) === localDateKey(today)) {
+        return t('date.today');
+    }
+
+    if (localDateKey(date) === localDateKey(yesterday)) {
+        return t('date.yesterday');
+    }
+
+    const options = date.getFullYear() === today.getFullYear()
+        ? { month: 'long', day: 'numeric' }
+        : { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString([], options);
+}
+
 function fileType(fileName) {
     const extension = (fileName.split('.').pop() || 'file').toUpperCase();
     return extension.length > 6 ? 'FILE' : extension;
@@ -584,6 +671,12 @@ async function init() {
     renderStaticState();
     setupEvents();
     await refreshHealth();
+    try {
+        const capabilities = await fetchJson('/api/capabilities');
+        state.canRevealFiles = Boolean(capabilities.canRevealFiles);
+    } catch {
+        state.canRevealFiles = false;
+    }
     await refreshTimeline();
     window.setInterval(() => {
         refreshHealth();

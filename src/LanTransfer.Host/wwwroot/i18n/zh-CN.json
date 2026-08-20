@@ -11,7 +11,8 @@
     "ready": "就绪"
   },
   "date": {
-    "today": "今天"
+    "today": "今天",
+    "yesterday": "昨天"
   },
   "upload": {
     "dropHint": "拖拽文件到这里，或选择文件",
@@ -46,6 +47,10 @@
     "title": "文件",
     "empty": "暂无文件",
     "download": "下载",
+    "copyLink": "复制链接",
+    "linkCopied": "文件链接已复制。",
+    "reveal": "所在位置",
+    "revealed": "已在文件夹中显示。",
     "size": "大小",
     "type": "类型"
   },
@@ -61,6 +66,8 @@
     "invalidMessage": "请输入 1 到 4000 个字符。",
     "messageFailed": "文字消息保存失败。",
     "noConnectAddress": "没有可用的连接地址。",
+    "revealNotAvailable": "仅可在宿主电脑上打开文件所在位置。",
+    "revealFailed": "无法打开文件所在位置。",
     "copyFailed": "无法复制链接。",
     "networkError": "网络错误。"
   },

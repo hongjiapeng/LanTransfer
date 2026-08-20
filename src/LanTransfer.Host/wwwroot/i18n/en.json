@@ -11,7 +11,8 @@
     "ready": "Ready"
   },
   "date": {
-    "today": "Today"
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "upload": {
     "dropHint": "Drag files here, or choose files",
@@ -46,6 +47,10 @@
     "title": "Files",
     "empty": "No files yet",
     "download": "Download",
+    "copyLink": "Copy link",
+    "linkCopied": "File link copied.",
+    "reveal": "Show in folder",
+    "revealed": "File shown in its folder.",
     "size": "Size",
     "type": "Type"
   },
@@ -61,6 +66,8 @@
     "invalidMessage": "Enter between 1 and 4,000 characters.",
     "messageFailed": "Message could not be saved.",
     "noConnectAddress": "No connection address is available.",
+    "revealNotAvailable": "File location can only be opened on the host computer.",
+    "revealFailed": "The file location could not be opened.",
     "copyFailed": "The link could not be copied.",
     "networkError": "Network error."
   },
