@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.Extensions.Logging;
 #if WINDOWS_UI_AUTOMATION
 using UIA = Interop.UIAutomationClient;
@@ -31,11 +30,6 @@ public static class BrowserLauncher
         try
         {
             if (OperatingSystem.IsWindows() && TryActivateExistingBrowserTab())
-            {
-                return true;
-            }
-
-            if (OperatingSystem.IsWindows() && TryActivateExistingBrowserWindow())
             {
                 return true;
             }
@@ -139,42 +133,6 @@ public static class BrowserLauncher
     private static bool TryActivateExistingBrowserTab() => false;
 #endif
 
-    private static bool TryActivateExistingBrowserWindow()
-    {
-        IntPtr matchingWindow = IntPtr.Zero;
-
-        EnumWindows((window, _) =>
-        {
-            if (!IsWindowVisible(window) || !IsBrowserProcessWindow(window))
-            {
-                return true;
-            }
-
-            var titleLength = GetWindowTextLength(window);
-            if (titleLength == 0)
-            {
-                return true;
-            }
-
-            var title = new StringBuilder(titleLength + 1);
-            GetWindowText(window, title, title.Capacity);
-            if (title.ToString().Contains(PageTitle, StringComparison.OrdinalIgnoreCase))
-            {
-                matchingWindow = window;
-                return false;
-            }
-
-            return true;
-        }, IntPtr.Zero);
-
-        if (matchingWindow == IntPtr.Zero)
-        {
-            return false;
-        }
-
-        return TryRestoreAndActivate(matchingWindow);
-    }
-
     private static bool TryRestoreAndActivate(IntPtr window)
     {
         if (IsIconic(window))
@@ -214,12 +172,6 @@ public static class BrowserLauncher
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern int GetWindowTextLength(IntPtr window);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern int GetWindowText(IntPtr window, StringBuilder text, int maxCount);
 
     [DllImport("user32.dll")]
     private static extern bool IsIconic(IntPtr window);
