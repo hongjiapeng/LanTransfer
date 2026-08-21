@@ -17,7 +17,9 @@ LanTransfer 是一个跨平台局域网文件和文字传输工具。在一台�
 - 流式保存文件，并使用 `.uploading` 临时文件避免半成品污染
 - 文件名安全处理、路径穿越防护、同名文件自动生成可读名称
 - 支持配置端口、存储目录、上传大小限制和可选访问令牌
-- 前端支持 English / 简体中文轻量多语言
+- 前端支持 English / 简体中文 / 繁体中文轻量多语言
+- 支持在主机端删除文字记录，并将接收文件移入 LanTransfer 回收区
+- Windows 主机支持在资源管理器中定位接收文件
 - 启动完成后自动使用默认浏览器打开页面
 - Windows 使用 LanTransfer 专属图标和原生托盘“打开/退出”菜单并隐藏控制台；macOS/Linux 保持控制台行为
 
@@ -94,15 +96,19 @@ dotnet run --project src/LanTransfer.Host
 ## API 概览
 
 - `GET /api/health`：返回服务状态和设备名称。
+- `GET /api/capabilities`：返回仅限主机端使用的界面能力。
 - `GET /api/connect`：返回可用的局域网连接地址。
 - `GET /api/connect/qr?url=...`：返回本地生成的 SVG 二维码。
 - `GET /api/messages`：列出纯文字备注。
 - `POST /api/messages`：发送纯文字备注。
+- `DELETE /api/messages/{id}`：在主机电脑上删除文字记录。
 - `POST /api/files/upload`：上传一个名为 `file` 的 multipart 文件字段。
 - `GET /api/files`：获取已接收文件列表。
+- `POST /api/files/{fileName}/reveal`：在 Windows 主机电脑的资源管理器中打开并定位接收文件。
+- `DELETE /api/files/{fileName}`：将接收文件移入主机电脑上的 `.lantransfer/trash` 回收区。
 - `GET /api/files/{fileName}`：下载指定文件。
 
-错误响应使用稳定的 `errorCode`，例如 `file_too_large`、`invalid_file_name`、`invalid_message`、`unauthorized`、`upload_failed`、`network_error`。
+历史记录删除和文件位置操作仅限主机电脑使用。错误响应使用稳定的 `errorCode`，例如 `file_too_large`、`invalid_file_name`、`invalid_message`、`unauthorized`、`upload_failed`、`delete_failed`、`host_only_action`、`network_error`。
 
 ## 从源码构建
 
@@ -169,7 +175,7 @@ LanTransfer/
 ## 路线图
 
 - 可选的限时配对码确认流程
-- 已接收文件删除与重命名
+- 已接收文件重命名
 - 更好的图片/文件缩略图
 - 桌面系统通知
 - 面向非可信网络的更强认证方案

@@ -15,7 +15,9 @@ LanTransfer is a cross-platform LAN file and text transfer tool powered by .NET 
 - Streaming file saves with temporary `.uploading` files
 - Safe file-name handling, path traversal protection, and readable duplicate names
 - Configurable port, storage directory, upload size limit, and optional access token
-- Lightweight English and Simplified Chinese web UI localization
+- Lightweight English, Simplified Chinese, and Traditional Chinese web UI localization
+- Host-side history actions for deleting text items and moving received files to the LanTransfer trash
+- On Windows, host-side actions can reveal a received file in Explorer
 - Default-browser launch after startup
 - Native LanTransfer icon with an Open/Exit tray menu and no console window on Windows; unchanged console behavior on macOS/Linux
 
@@ -90,15 +92,19 @@ dotnet run --project src/LanTransfer.Host
 ## API Overview
 
 - `GET /api/health` returns service status and device name.
+- `GET /api/capabilities` reports host-only UI capabilities.
 - `GET /api/connect` returns usable LAN connection URLs.
 - `GET /api/connect/qr?url=...` returns a locally generated SVG QR code.
 - `GET /api/messages` lists plain-text notes.
 - `POST /api/messages` sends a plain-text note.
+- `DELETE /api/messages/{id}` deletes a text note from the host computer.
 - `POST /api/files/upload` uploads one multipart file field named `file`.
 - `GET /api/files` lists received files.
+- `POST /api/files/{fileName}/reveal` opens the received file's location in Windows Explorer on the host computer.
+- `DELETE /api/files/{fileName}` moves a received file to `.lantransfer/trash` on the host computer.
 - `GET /api/files/{fileName}` downloads a received file.
 
-Error responses use stable `errorCode` values such as `file_too_large`, `invalid_file_name`, `invalid_message`, `unauthorized`, `upload_failed`, and `network_error`.
+History deletion and file-location actions are restricted to the host computer. Error responses use stable `errorCode` values such as `file_too_large`, `invalid_file_name`, `invalid_message`, `unauthorized`, `upload_failed`, `delete_failed`, `host_only_action`, and `network_error`.
 
 ## Build from Source
 
@@ -165,7 +171,7 @@ LanTransfer/
 ## Roadmap
 
 - Optional expiring pairing-code approval flow
-- Delete and rename actions for received files
+- Rename actions for received files
 - Better image/file thumbnails
 - Desktop notifications
 - Stronger authentication for non-trusted networks
