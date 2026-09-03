@@ -35,12 +35,19 @@ if (OperatingSystem.IsWindows())
 
 const long MultipartOverheadAllowanceBytes = 16L * 1024 * 1024;
 
+var webRootPath = ResolveWebRootPath();
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
     ContentRootPath = AppContext.BaseDirectory,
-    WebRootPath = ResolveWebRootPath()
+    WebRootPath = webRootPath
 });
+
+if (!File.Exists(Path.Combine(webRootPath, "index.html")))
+{
+    throw new InvalidOperationException(
+        $"LanTransfer web assets are missing from '{webRootPath}'. Reinstall the application or run it from a complete publish directory.");
+}
 
 var startupOptions = LoadOptions(builder.Configuration);
 var requestedPort = startupOptions.Port;
@@ -491,7 +498,12 @@ static string ResolveWebRootPath()
         Path.Combine(Directory.GetCurrentDirectory(), "src", "LanTransfer.Host", "wwwroot")
     };
 
-    return candidates.FirstOrDefault(Directory.Exists) ?? candidates[0];
+    // A partially copied installation can leave the directory (and even the
+    // favicon) behind without the actual application page. Prefer a complete
+    // web root so a valid fallback is still usable during development.
+    return candidates.FirstOrDefault(path => File.Exists(Path.Combine(path, "index.html")))
+        ?? candidates.FirstOrDefault(Directory.Exists)
+        ?? candidates[0];
 }
 
 public sealed record TextMessageRequest(string Text);

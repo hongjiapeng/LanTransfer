@@ -38,6 +38,18 @@ dotnet publish src/LanTransfer.Host/LanTransfer.Host.csproj `
     -p:DebugSymbols=false `
     --output $publishPath
 
+$requiredWebAssets = @(
+    "wwwroot\index.html",
+    "wwwroot\css\app.css",
+    "wwwroot\js\app.js"
+)
+foreach ($asset in $requiredWebAssets) {
+    $assetPath = Join-Path $publishPath $asset
+    if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+        throw "Published application is missing required web asset: $assetPath"
+    }
+}
+
 & $iscc `
     "/DAppVersion=$Version" `
     "/DSourceDir=$publishPath" `
