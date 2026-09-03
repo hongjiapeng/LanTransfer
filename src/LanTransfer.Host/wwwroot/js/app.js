@@ -52,6 +52,39 @@ function withToken(url) {
     return `${url}${separator}token=${encodeURIComponent(state.accessToken)}`;
 }
 
+function isLoopbackHostname(hostname) {
+    const normalized = hostname.toLowerCase();
+    return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1' || normalized === '[::1]';
+}
+
+async function getShareableBaseUrl() {
+    const currentUrl = new URL(window.location.href);
+    if (!isLoopbackHostname(currentUrl.hostname)) {
+        return currentUrl;
+    }
+
+    let lanUrl = state.connectUrls.find(item => item.isLanAddress)?.url;
+    if (!lanUrl) {
+        try {
+            const payload = await fetchJson('/api/connect');
+            state.connectUrls = payload.urls || [];
+            lanUrl = state.connectUrls.find(item => item.isLanAddress)?.url;
+        } catch {
+            // Keep localhost as a fallback when no LAN address can be detected.
+        }
+    }
+
+    return lanUrl ? new URL(lanUrl) : currentUrl;
+}
+
+async function getShareableFileUrl(file) {
+    const fileUrl = new URL(file.downloadUrl, window.location.href);
+    const shareableBaseUrl = await getShareableBaseUrl();
+    fileUrl.protocol = shareableBaseUrl.protocol;
+    fileUrl.host = shareableBaseUrl.host;
+    return withToken(fileUrl.toString());
+}
+
 function authHeaders(extra = {}) {
     return state.accessToken
         ? { ...extra, 'X-LanTransfer-Token': state.accessToken }
@@ -286,10 +319,12 @@ function openFileMenu(file, { x, y, trigger = null, alignRight = false }) {
     menu.setAttribute('aria-label', t('files.actions'));
 
     const downloadUrl = withToken(file.downloadUrl);
-    const absoluteUrl = new URL(downloadUrl, window.location.href).toString();
     menu.appendChild(createFileMenuItem(t('files.download'), { href: downloadUrl }));
     menu.appendChild(createFileMenuItem(t('files.copyLink'), {
-        onSelect: () => copyText(absoluteUrl, 'files.linkCopied')
+        onSelect: async () => {
+            const shareableUrl = await getShareableFileUrl(file);
+            await copyText(shareableUrl, 'files.linkCopied');
+        }
     }));
 
     if (state.canRevealFiles) {
