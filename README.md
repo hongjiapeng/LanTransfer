@@ -1,58 +1,80 @@
+<div align="center">
+
+[中文文档](./README.zh-CN.md) · **English**
+
 # LanTransfer
 
-[中文文档](./README.zh-CN.md)
+**A local-first browser workspace for transferring files and plain-text notes across devices on the same LAN.**
 
-LanTransfer is a cross-platform LAN file and text transfer tool powered by .NET and a browser-based UI. Run `lantransfer` on one device, then scan its local QR code from another phone, tablet, or computer on the same network.
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square&logo=dotnet&logoColor=white)
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-LAN_host-512BD4?style=flat-square&logo=dotnet&logoColor=white)
+![Windows macOS Linux](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-0078D4?style=flat-square)
+[![Download](https://img.shields.io/badge/DOWNLOAD-GitHub_Releases-2ea44f?style=flat-square&labelColor=333)](https://github.com/hongjiapeng/LanTransfer/releases)
 
-## Features
+</div>
 
-- Browser-based LAN file upload/download and plain-text notes
-- Local QR connection dialog with multi-adapter address selection
-- Cross-platform host named `lantransfer`
-- ASP.NET Core Kestrel receiver using HTTP by default for LAN access
-- Static HTML/CSS/JavaScript UI with no frontend build system
-- Chat-style file transfer interface for phones, tablets, and desktops
-- Streaming file saves with temporary `.uploading` files
-- Safe file-name handling, path traversal protection, and readable duplicate names
-- Configurable port, storage directory, upload size limit, and optional access token
-- Lightweight English, Simplified Chinese, and Traditional Chinese web UI localization
-- Host-side history actions for deleting text items and moving received files to the LanTransfer trash
-- On Windows, host-side actions can reveal a received file in Explorer
-- Default-browser launch after startup
-- Native LanTransfer icon with an Open/Exit tray menu and no console window on Windows; unchanged console behavior on macOS/Linux
+LanTransfer keeps file sharing and quick text handoff in one lightweight local service. Run it on a computer, open the browser UI from a phone, tablet, or another computer on the same trusted network, and transfer directly between devices without an account or cloud service.
 
-## Screenshot
+## Product tour
 
-![LanTransfer desktop UI](./screenshots/lantransfer-product-preview-en.png)
+| English UI | 简体中文 UI |
+|:---:|:---:|
+| <img src="screenshots/lantransfer-product-preview-en.png" alt="LanTransfer English browser UI on a desktop and phone" width="610"> | <img src="screenshots/lantransfer-product-preview-zh-CN.png" alt="LanTransfer Simplified Chinese browser UI on a desktop and phone" width="610"> |
+| Browser-based file transfer, downloads, and text notes across devices. | 在桌面电脑和手机之间传输文件、下载文件和发送文本。 |
 
-## Platform Support
+## What it does
 
-Receiver:
+| Area | Capability |
+|---|---|
+| **File transfer** | Upload files from any modern browser, stream them to local storage, download them from other devices, and copy shareable file links |
+| **Text handoff** | Send and persist plain-text notes alongside transferred files |
+| **Device connection** | Detect usable LAN addresses, show a QR code, and let you switch between multiple network adapters |
+| **Cross-platform host** | Run the receiver on Windows, macOS, or Linux with .NET 10 |
+| **Host controls** | Delete text history, move received files to the LanTransfer trash, and reveal file locations in Windows Explorer |
+| **Safe storage** | Protect against path traversal, handle duplicate names readably, and use temporary `.uploading` files while receiving |
+| **Localization** | Lightweight English, Simplified Chinese, and Traditional Chinese browser UI |
+| **Windows integration** | Single-instance behavior, default-browser launch, and an optional tray icon with Open/Exit actions |
 
-- Windows, macOS, or Linux with .NET 10
+## Quick start
 
-Sender:
+1. Download the Windows installer or portable build from [GitHub Releases](https://github.com/hongjiapeng/LanTransfer/releases), or run it from source as shown below.
+2. Start LanTransfer on the computer that will receive files.
+3. The app listens on `http://0.0.0.0:8765` and opens the local page in your default browser.
+4. On another device connected to the same LAN, open `http://<receiver-ip>:8765`, or choose **Connect new device** on the host and scan the QR code.
+5. Drag files into the page or enter a plain-text note. Received files can be downloaded from any connected browser.
 
-- Any modern browser on Windows, macOS, Linux, Android, or iOS
-
-Network:
-
-- Devices must be on the same local network unless you configure VPN, tunneling, or routing yourself.
-
-## Quick Start
+Run from source:
 
 ```bash
 dotnet run --project src/LanTransfer.Host
 ```
 
-LanTransfer listens on `http://0.0.0.0:8765` and opens the local page in your default browser. Use **Connect new device** in the page menu to show a QR code for each detected LAN address.
+Useful addresses:
 
-Open one of these URLs:
-
-- Same device: `http://localhost:8765`
+- Same computer: `http://localhost:8765`
 - Another device on the LAN: `http://<receiver-ip>:8765`
 
-The first version intentionally uses HTTP on the local network. It does not require trusting an ASP.NET Core development HTTPS certificate.
+> [!IMPORTANT]
+> The first version intentionally uses HTTP on the local network, not HTTPS. Use LanTransfer only on a trusted private Wi-Fi/LAN, or configure your own VPN, tunnel, or network boundary for other environments.
+
+## Requirements
+
+| Requirement | Notes |
+|---|---|
+| Receiver | Windows, macOS, or Linux with the .NET 10 runtime when running from source |
+| Sender | Any modern browser on Windows, macOS, Linux, Android, or iOS |
+| Network | Devices must be on the same local network unless you provide routing, VPN, or tunneling yourself |
+| Windows extras | Windows host actions can reveal a received file in Explorer; the tray integration is Windows-only |
+
+Self-contained release packages include the runtime, so users do not need to install .NET separately.
+
+## Security and privacy
+
+LanTransfer is local-first: files and text are stored on the host computer, and the application does not require an account or send content to a cloud service.
+
+By default, the service is reachable by devices that can access the listening port on the local network. Set `AccessToken` to require an access token for protected API calls. The token can be supplied as `X-LanTransfer-Token` or `?token=...`; generated connection URLs include it when configured.
+
+The optional token helps prevent accidental access, but HTTP does not provide confidentiality against someone who can observe or modify traffic on a hostile network. Do not expose the service directly to the public internet, and avoid sharing token-bearing URLs outside the trusted network.
 
 ## Configuration
 
@@ -72,11 +94,17 @@ LanTransfer reads the `LanTransfer` section from `src/LanTransfer.Host/appsettin
 }
 ```
 
-If `AccessToken` is configured, protected API calls must include `X-LanTransfer-Token` or `?token=...`.
+| Setting | Default | Description |
+|---|---:|---|
+| `Port` | `8765` | HTTP listening port. If it is unavailable, LanTransfer selects an available port. |
+| `StorageDirectory` | `null` | Received-file and text storage location. The default is under the current user's local application-data directory. |
+| `MaxFileSizeBytes` | `1073741824` | Maximum accepted file size, 1 GiB by default. |
+| `MaxMessageLength` | `4000` | Maximum length of a plain-text note. |
+| `OpenBrowserOnStart` | `true` | Open the host page in the default browser after startup. |
+| `EnableWindowsTray` | `true` | Enable the Windows tray icon when running on Windows. |
+| `AccessToken` | `null` | Optional token for protected API calls and connection URLs. |
 
-When `StorageDirectory` is `null`, LanTransfer stores received files under the current user's local application-data directory (`%LOCALAPPDATA%\LanTransfer\uploads` on Windows). Set an absolute or app-relative path to override it. Keeping the default outside the executable directory makes package upgrades and uninstall safe for user files.
-
-Environment variables can override configuration values by using the `LanTransfer__` prefix, for example:
+Environment variables can override configuration values using the `LanTransfer__` prefix:
 
 ```bash
 LanTransfer__Port=9000 dotnet run --project src/LanTransfer.Host
@@ -89,69 +117,73 @@ $env:LanTransfer__Port = "9000"
 dotnet run --project src/LanTransfer.Host
 ```
 
-## API Overview
+## API overview
 
-- `GET /api/health` returns service status and device name.
-- `GET /api/capabilities` reports host-only UI capabilities.
-- `GET /api/connect` returns usable LAN connection URLs.
-- `GET /api/connect/qr?url=...` returns a locally generated SVG QR code.
-- `GET /api/messages` lists plain-text notes.
-- `POST /api/messages` sends a plain-text note.
-- `DELETE /api/messages/{id}` deletes a text note from the host computer.
-- `POST /api/files/upload` uploads one multipart file field named `file`.
-- `GET /api/files` lists received files.
-- `POST /api/files/{fileName}/reveal` opens the received file's location in Windows Explorer on the host computer.
-- `DELETE /api/files/{fileName}` moves a received file to `.lantransfer/trash` on the host computer.
-- `GET /api/files/{fileName}` downloads a received file.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/health` | Return service status, name, and host device name |
+| `GET` | `/api/capabilities` | Report host-only UI capabilities |
+| `GET` | `/api/connect` | Return usable LAN connection URLs |
+| `GET` | `/api/connect/qr?url=...` | Return a locally generated SVG QR code |
+| `GET` / `POST` | `/api/messages` | List or add plain-text notes |
+| `DELETE` | `/api/messages/{id}` | Delete a note from the host computer |
+| `POST` | `/api/files/upload` | Upload one multipart file field named `file` |
+| `GET` | `/api/files` | List received files |
+| `GET` | `/api/files/{fileName}` | Download a received file |
+| `POST` | `/api/files/{fileName}/reveal` | Open a file's location in Windows Explorer on the host |
+| `DELETE` | `/api/files/{fileName}` | Move a received file to `.lantransfer/trash` on the host |
 
-History deletion and file-location actions are restricted to the host computer. Error responses use stable `errorCode` values such as `file_too_large`, `invalid_file_name`, `invalid_message`, `unauthorized`, `upload_failed`, `delete_failed`, `host_only_action`, and `network_error`.
+History deletion and file-location actions are restricted to the host computer. Common stable error codes include `file_too_large`, `invalid_file_name`, `invalid_message`, `unauthorized`, `upload_failed`, `delete_failed`, `host_only_action`, and `network_error`.
 
-## Build from Source
+## Development
+
+### Build and test
 
 ```bash
-dotnet build LanTransfer.sln
-dotnet test LanTransfer.sln
+dotnet restore LanTransfer.sln
+dotnet build LanTransfer.sln --configuration Release
+dotnet test LanTransfer.sln --configuration Release
 ```
 
 Run the built executable directly:
 
 ```bash
-src/LanTransfer.Host/bin/Debug/net10.0/lantransfer
+src/LanTransfer.Host/bin/Release/net10.0/lantransfer
 ```
 
 On Windows:
 
 ```powershell
-.\src\LanTransfer.Host\bin\Debug\net10.0\lantransfer.exe
+.\src\LanTransfer.Host\bin\Release\net10.0\lantransfer.exe
 ```
 
-## Release
+### Portable builds and Windows installer
 
-Use the release script to test, tag, and push a new version:
-
-```powershell
-.\scripts\release.ps1 0.1.0
-```
-
-The script creates and pushes a `v0.1.0` tag. GitHub Actions then creates a GitHub Release, publishes self-contained builds, and uploads assets for Windows x64, Linux x64/ARM64, and macOS x64/ARM64.
-
-To preview the checks without creating a tag, run:
-
-```powershell
-.\scripts\release.ps1 0.1.0 -DryRun
-```
-
-Windows releases also include `LanTransfer-version-win-x64-Setup.exe`. The installer supports English, Simplified Chinese, and Traditional Chinese. It selects a language based on the system language by default and allows manual selection at the beginning of setup. It creates a Start Menu shortcut by default and offers optional desktop-shortcut and start-on-sign-in tasks. The application is published self-contained, so users do not need to install the .NET Runtime separately.
-
-The installer uses a per-user install location, `%LOCALAPPDATA%\Programs\LanTransfer`, and does not require administrator privileges. Received files remain under `%LOCALAPPDATA%\LanTransfer\uploads` and are not removed when the application is uninstalled.
-
-To build the Windows installer locally, install Inno Setup 6 and run:
+Create a self-contained Windows x64 publish and build the installer with Inno Setup 6 installed:
 
 ```powershell
 .\scripts\build-installer.ps1 -Version 0.6.1
 ```
 
-## Project Structure
+The installer uses a per-user location, `%LOCALAPPDATA%\Programs\LanTransfer`, requires no administrator privileges, and can optionally create a desktop shortcut or start LanTransfer at sign-in. Received files remain under `%LOCALAPPDATA%\LanTransfer\uploads` and are not removed when the application is uninstalled.
+
+### Release
+
+After committing and pushing the intended changes, run:
+
+```powershell
+.\scripts\release.ps1 0.6.2
+```
+
+The script runs the test suite, creates an annotated `v0.6.2` tag, and pushes it. GitHub Actions then builds self-contained packages for Windows x64, Linux x64/ARM64, and macOS x64/ARM64, builds the Windows installer, and creates the GitHub Release.
+
+To preview the release checks without creating a tag:
+
+```powershell
+.\scripts\release.ps1 0.6.2 -DryRun
+```
+
+## Project structure
 
 ```text
 LanTransfer/
@@ -162,7 +194,9 @@ LanTransfer/
 ├─ tests/
 │  └─ LanTransfer.Tests/
 ├─ docs/
+├─ installer/
 ├─ screenshots/
+├─ scripts/
 ├─ README.md
 ├─ README.zh-CN.md
 └─ LanTransfer.sln
@@ -172,10 +206,18 @@ LanTransfer/
 
 - Optional expiring pairing-code approval flow
 - Rename actions for received files
-- Better image/file thumbnails
+- Better image and file thumbnails
 - Desktop notifications
 - Stronger authentication for non-trusted networks
 
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+Built for simple, direct transfers on your local network.
+
+</div>
