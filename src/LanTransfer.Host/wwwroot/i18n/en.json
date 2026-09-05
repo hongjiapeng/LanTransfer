@@ -28,7 +28,9 @@
   },
   "composer": {
     "placeholder": "Enter a note or send a file",
-    "send": "Send"
+    "send": "Send",
+    "pendingAttachments": "Files ready to send",
+    "removeAttachment": "Remove {name}"
   },
   "connect": {
     "action": "Connect new device",

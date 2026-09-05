@@ -28,7 +28,9 @@
   },
   "composer": {
     "placeholder": "輸入備註或傳送檔案",
-    "send": "傳送"
+    "send": "傳送",
+    "pendingAttachments": "待傳送檔案",
+    "removeAttachment": "移除 {name}"
   },
   "connect": {
     "action": "連線新裝置",

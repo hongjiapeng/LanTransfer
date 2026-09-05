@@ -162,7 +162,7 @@ Windows：
 安装 Inno Setup 6 后，可以创建自包含 Windows x64 发布包并构建安装程序：
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.6.1
+.\scripts\build-installer.ps1 -Version 0.7.0
 ```
 
 安装程序默认按当前用户安装到 `%LOCALAPPDATA%\Programs\LanTransfer`，不需要管理员权限，并可选择创建桌面快捷方式或在登录 Windows 后启动 LanTransfer。接收文件默认保存在 `%LOCALAPPDATA%\LanTransfer\uploads`，卸载应用不会删除这些用户文件。

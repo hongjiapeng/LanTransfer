@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "0.6.1",
+    [string]$Version = "0.7.0",
     [string]$PublishDirectory = "artifacts\win-x64",
     [string]$OutputDirectory = "dist"
 )

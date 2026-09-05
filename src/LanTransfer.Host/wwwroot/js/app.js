@@ -5,6 +5,7 @@ const state = {
     connectionStatus: 'connecting',
     canRevealFiles: false,
     canManageHistory: false,
+    pendingFiles: [],
     sentMessageIds: new Set(),
     connectUrls: []
 };
@@ -19,6 +20,7 @@ const dom = {
     chooseButton: document.getElementById('chooseButton'),
     sendButton: document.getElementById('sendButton'),
     messageInput: document.getElementById('messageInput'),
+    pendingAttachments: document.getElementById('pendingAttachments'),
     languageSelect: document.getElementById('languageSelect'),
     tokenInput: document.getElementById('tokenInput'),
     toast: document.getElementById('toast'),
@@ -618,6 +620,124 @@ async function sendFiles(files) {
     await refreshTimeline();
 }
 
+function extensionForMimeType(mimeType) {
+    const extensions = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'image/bmp': 'bmp',
+        'image/svg+xml': 'svg',
+        'application/pdf': 'pdf',
+        'text/plain': 'txt',
+        'text/csv': 'csv',
+        'application/zip': 'zip'
+    };
+
+    return extensions[mimeType] || (mimeType?.split('/').pop()?.replace(/[^a-z0-9]/gi, '') || 'bin');
+}
+
+function normalizeClipboardFile(file, index) {
+    if (file.name) {
+        return file;
+    }
+
+    const mimeType = file.type || 'application/octet-stream';
+    const prefix = mimeType.startsWith('image/') ? 'pasted-image' : 'pasted-file';
+    const extension = extensionForMimeType(mimeType);
+    return new File([file], `${prefix}-${Date.now()}-${index + 1}.${extension}`, {
+        type: mimeType,
+        lastModified: Date.now()
+    });
+}
+
+function getClipboardFiles(clipboardData) {
+    const files = Array.from(clipboardData?.files || []);
+    if (files.length > 0) {
+        return files.map(normalizeClipboardFile);
+    }
+
+    return Array.from(clipboardData?.items || [])
+        .filter(item => item.kind === 'file')
+        .map(item => item.getAsFile())
+        .filter(Boolean)
+        .map(normalizeClipboardFile);
+}
+
+function renderPendingFiles() {
+    dom.pendingAttachments.replaceChildren();
+    dom.pendingAttachments.hidden = state.pendingFiles.length === 0;
+
+    for (const [index, file] of state.pendingFiles.entries()) {
+        const attachment = document.createElement('div');
+        attachment.className = 'pending-attachment';
+        attachment.setAttribute('role', 'listitem');
+
+        const icon = document.createElement('span');
+        icon.className = 'pending-attachment-icon';
+        icon.textContent = fileType(file.name);
+
+        const details = document.createElement('span');
+        details.className = 'pending-attachment-details';
+
+        const name = document.createElement('span');
+        name.className = 'pending-attachment-name';
+        name.textContent = file.name;
+
+        const size = document.createElement('span');
+        size.className = 'pending-attachment-size';
+        size.textContent = formatFileSize(file.size);
+        details.append(name, size);
+
+        const remove = document.createElement('button');
+        remove.className = 'pending-attachment-remove';
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.title = t('composer.removeAttachment', { name: file.name });
+        remove.setAttribute('aria-label', remove.title);
+        remove.addEventListener('click', () => {
+            state.pendingFiles.splice(index, 1);
+            renderPendingFiles();
+            dom.messageInput.focus();
+        });
+
+        attachment.append(icon, details, remove);
+        dom.pendingAttachments.appendChild(attachment);
+    }
+}
+
+function handleMessagePaste(event) {
+    const files = getClipboardFiles(event.clipboardData);
+    if (files.length === 0) {
+        return;
+    }
+
+    event.preventDefault();
+    state.pendingFiles.push(...files);
+    renderPendingFiles();
+}
+
+async function sendComposer() {
+    const text = dom.messageInput.value.trim();
+    const files = [...state.pendingFiles];
+    if ((!text && files.length === 0) || state.isUploading || state.isSendingMessage) {
+        if (!text && files.length === 0) {
+            showToast(t('errors.invalidMessage'), true);
+        }
+        return;
+    }
+
+    state.pendingFiles = [];
+    renderPendingFiles();
+
+    if (text) {
+        await sendText();
+    }
+    if (files.length > 0) {
+        await sendFiles(files);
+    }
+}
+
 async function sendText() {
     const text = dom.messageInput.value.trim();
     if (!text || state.isSendingMessage) {
@@ -710,13 +830,14 @@ async function copyConnectUrl() {
 
 function setupEvents() {
     dom.chooseButton.addEventListener('click', () => dom.fileInput.click());
-    dom.sendButton.addEventListener('click', sendText);
+    dom.sendButton.addEventListener('click', sendComposer);
     dom.fileInput.addEventListener('change', event => sendFiles(event.target.files));
     dom.messageInput.addEventListener('input', resizeMessageInput);
+    dom.messageInput.addEventListener('paste', handleMessagePaste);
     dom.messageInput.addEventListener('keydown', event => {
         if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
             event.preventDefault();
-            sendText();
+            sendComposer();
         }
     });
 
@@ -793,6 +914,8 @@ function renderStaticState() {
     document.title = t('app.title');
     setConnectionStatus(state.connectionStatus);
     dom.messageInput.setAttribute('aria-label', t('composer.placeholder'));
+    dom.pendingAttachments.setAttribute('aria-label', t('composer.pendingAttachments'));
+    renderPendingFiles();
     if (!dom.deviceName.textContent || dom.deviceName.textContent === 'DESKTOP-01') {
         dom.deviceName.textContent = t('device.defaultName');
     }

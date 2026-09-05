@@ -28,7 +28,9 @@
   },
   "composer": {
     "placeholder": "输入备注或发送文件",
-    "send": "发送"
+    "send": "发送",
+    "pendingAttachments": "待发送文件",
+    "removeAttachment": "移除 {name}"
   },
   "connect": {
     "action": "连接新设备",

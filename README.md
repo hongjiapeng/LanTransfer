@@ -162,7 +162,7 @@ On Windows:
 Create a self-contained Windows x64 publish and build the installer with Inno Setup 6 installed:
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.6.1
+.\scripts\build-installer.ps1 -Version 0.7.0
 ```
 
 The installer uses a per-user location, `%LOCALAPPDATA%\Programs\LanTransfer`, requires no administrator privileges, and can optionally create a desktop shortcut or start LanTransfer at sign-in. Received files remain under `%LOCALAPPDATA%\LanTransfer\uploads` and are not removed when the application is uninstalled.
