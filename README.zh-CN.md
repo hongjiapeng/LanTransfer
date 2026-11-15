@@ -33,7 +33,7 @@ LanTransfer 将文件共享和临时文字传递整合在一个轻量的本地�
 | **主机控制** | 删除文字历史记录，将接收文件移入 LanTransfer 回收区，并在 Windows 资源管理器中定位文件 |
 | **安全存储** | 防止路径穿越，清晰处理同名文件，并在接收过程中使用 `.uploading` 临时文件 |
 | **界面本地化** | 提供 English、简体中文和繁体中文轻量浏览器界面 |
-| **Windows 集成** | 支持单实例、启动后打开默认浏览器，以及带有“打开/退出”操作的可选托盘图标 |
+| **Windows 集成** | 支持单实例、启动后打开默认浏览器，以及通过托盘菜单控制登录时启动 |
 
 ## 快速开始
 
@@ -67,6 +67,8 @@ dotnet run --project src/LanTransfer.Host
 | Windows 特性 | Windows 主机可以在资源管理器中定位接收文件；托盘集成仅适用于 Windows |
 
 自包含发布包已包含运行时，普通用户无需另外安装 .NET。
+
+在 Windows 上，可以右键点击通知区域中的 LanTransfer 图标，勾选或取消勾选“登录 Windows 时启动”。此设置与安装程序中的对应选项共用当前用户的启动快捷方式；登录后应用会按现有配置决定是否打开浏览器。便携版启用后请保持程序路径不变。
 
 ## 安全与隐私
 
@@ -162,7 +164,7 @@ Windows：
 安装 Inno Setup 6 后，可以创建自包含 Windows x64 发布包并构建安装程序：
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.7.0
+.\scripts\build-installer.ps1 -Version 0.8.0
 ```
 
 安装程序默认按当前用户安装到 `%LOCALAPPDATA%\Programs\LanTransfer`，不需要管理员权限，并可选择创建桌面快捷方式或在登录 Windows 后启动 LanTransfer。接收文件默认保存在 `%LOCALAPPDATA%\LanTransfer\uploads`，卸载应用不会删除这些用户文件。

@@ -33,7 +33,7 @@ LanTransfer keeps file sharing and quick text handoff in one lightweight local s
 | **Host controls** | Delete text history, move received files to the LanTransfer trash, and reveal file locations in Windows Explorer |
 | **Safe storage** | Protect against path traversal, handle duplicate names readably, and use temporary `.uploading` files while receiving |
 | **Localization** | Lightweight English, Simplified Chinese, and Traditional Chinese browser UI |
-| **Windows integration** | Single-instance behavior, default-browser launch, and an optional tray icon with Open/Exit actions |
+| **Windows integration** | Single-instance behavior, default-browser launch, and a tray menu option to start at sign-in |
 
 ## Quick start
 
@@ -65,6 +65,8 @@ Useful addresses:
 | Sender | Any modern browser on Windows, macOS, Linux, Android, or iOS |
 | Network | Devices must be on the same local network unless you provide routing, VPN, or tunneling yourself |
 | Windows extras | Windows host actions can reveal a received file in Explorer; the tray integration is Windows-only |
+
+On Windows, right-click the LanTransfer notification-area icon and select “Start when I sign in to Windows” to enable or disable startup. This uses the same per-user Startup shortcut as the installer option. The existing browser-launch setting still applies at sign-in. If using the portable version, keep the application at the same path after enabling startup.
 
 Self-contained release packages include the runtime, so users do not need to install .NET separately.
 
@@ -162,7 +164,7 @@ On Windows:
 Create a self-contained Windows x64 publish and build the installer with Inno Setup 6 installed:
 
 ```powershell
-.\scripts\build-installer.ps1 -Version 0.7.0
+.\scripts\build-installer.ps1 -Version 0.8.0
 ```
 
 The installer uses a per-user location, `%LOCALAPPDATA%\Programs\LanTransfer`, requires no administrator privileges, and can optionally create a desktop shortcut or start LanTransfer at sign-in. Received files remain under `%LOCALAPPDATA%\LanTransfer\uploads` and are not removed when the application is uninstalled.

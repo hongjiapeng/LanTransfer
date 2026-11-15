@@ -24,10 +24,12 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     private const uint NifTip = 0x00000004;
     private const uint MfString = 0x00000000;
     private const uint MfSeparator = 0x00000800;
+    private const uint MfChecked = 0x00000008;
     private const uint TpmRightButton = 0x0002;
     private const uint TpmReturnCmd = 0x0100;
     private const uint OpenCommand = 1;
     private const uint ExitCommand = 2;
+    private const uint StartupCommand = 3;
     private static readonly IntPtr HwndMessage = new(-3);
     private static readonly IntPtr IdiApplication = new(32512);
 
@@ -224,6 +226,11 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
 
     private void ShowContextMenu(IntPtr window)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
         var menu = CreatePopupMenu();
         if (menu == IntPtr.Zero)
         {
@@ -234,6 +241,9 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
         {
             var isChinese = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
             AppendMenu(menu, MfString, OpenCommand, isChinese ? "打开 LanTransfer" : "Open LanTransfer");
+            var startupEnabled = WindowsStartupService.IsEnabled();
+            AppendMenu(menu, MfString | (startupEnabled ? MfChecked : 0), StartupCommand,
+                isChinese ? "登录 Windows 时启动" : "Start when I sign in to Windows");
             AppendMenu(menu, MfSeparator, 0, null);
             AppendMenu(menu, MfString, ExitCommand, isChinese ? "退出" : "Exit");
             GetCursorPos(out var point);
@@ -242,6 +252,20 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
             if (command == OpenCommand)
             {
                 BrowserLauncher.TryOpen(_urls.LocalUrl, _logger);
+            }
+            else if (command == StartupCommand)
+            {
+                try
+                {
+                    WindowsStartupService.SetEnabled(!startupEnabled);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Could not change the Windows startup setting.");
+                    MessageBox(window,
+                        isChinese ? "无法更改开机自启设置，请检查启动文件夹权限。" : "Could not change the startup setting. Check permissions for the Startup folder.",
+                        "LanTransfer", 0x10);
+                }
             }
             else if (command == ExitCommand)
             {
@@ -641,4 +665,7 @@ public sealed class WindowsTrayService : IHostedService, IDisposable
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetForegroundWindow(IntPtr window);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int MessageBox(IntPtr window, string text, string caption, uint type);
 }
