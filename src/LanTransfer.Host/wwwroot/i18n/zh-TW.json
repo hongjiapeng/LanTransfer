@@ -54,6 +54,7 @@
     "linkCopied": "檔案連結已複製。",
     "reveal": "所在資料夾",
     "revealed": "已在資料夾中顯示。",
+    "revealedInBackground": "資料夾已開啟，請從工作列切換至檔案總管。",
     "deleted": "檔案已移入 LanTransfer 回收區。",
     "size": "大小",
     "type": "類型"

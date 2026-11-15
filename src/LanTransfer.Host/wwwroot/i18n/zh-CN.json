@@ -54,6 +54,7 @@
     "linkCopied": "文件链接已复制。",
     "reveal": "所在位置",
     "revealed": "已在文件夹中显示。",
+    "revealedInBackground": "文件夹已打开，请从任务栏切换到文件资源管理器。",
     "deleted": "文件已移入 LanTransfer 回收区。",
     "size": "大小",
     "type": "类型"

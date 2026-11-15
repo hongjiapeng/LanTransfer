@@ -204,8 +204,8 @@ async function copyText(value, successKey) {
 
 async function revealFile(fileName) {
     try {
-        await fetchJson(`/api/files/${encodeURIComponent(fileName)}/reveal`, { method: 'POST' });
-        showToast(t('files.revealed'));
+        const result = await fetchJson(`/api/files/${encodeURIComponent(fileName)}/reveal`, { method: 'POST' });
+        showToast(t(result.foregrounded === false ? 'files.revealedInBackground' : 'files.revealed'));
     } catch (error) {
         showToast(t(errorKey(error.message)), true);
     }

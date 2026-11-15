@@ -54,6 +54,7 @@
     "linkCopied": "File link copied.",
     "reveal": "Show in folder",
     "revealed": "File shown in its folder.",
+    "revealedInBackground": "Folder opened. Switch to File Explorer from the taskbar.",
     "deleted": "File moved to the LanTransfer trash.",
     "size": "Size",
     "type": "Type"

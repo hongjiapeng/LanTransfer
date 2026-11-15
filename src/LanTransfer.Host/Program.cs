@@ -14,7 +14,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QRCoder;
-using System.Diagnostics;
 using System.Net;
 
 Mutex? singleInstanceMutex = null;
@@ -315,11 +314,12 @@ app.MapPost("/api/files/{fileName}/reveal", async (
         }
 
         var fullPath = Path.GetFullPath(Path.Combine(options.Value.StorageDirectory, file.FileName));
-        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{fullPath}\"")
+        var foregrounded = await WindowsFileRevealer.RevealAsync(fullPath, cancellationToken);
+        if (!foregrounded)
         {
-            UseShellExecute = true
-        });
-        return Results.Ok(new { revealed = true });
+            app.Logger.LogWarning("The file was revealed, but Explorer could not be activated.");
+        }
+        return Results.Ok(new { revealed = true, foregrounded });
     }
     catch (FileStorageException ex) when (ex.ErrorCode == ErrorCodes.InvalidFileName)
     {
